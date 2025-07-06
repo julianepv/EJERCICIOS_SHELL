@@ -1,0 +1,52 @@
+
+# Utilice los comandos date y who para escribir un programa llamado conntime que imprima la cantidad de horas y minutos que un usuario ha estado conectado al sistema (suponga que es menos de 24 horas).
+
+# Verificar que se ha pasado exactamente 1 argumento
+if [ $# -ne 1 ]; then
+    echo 'error: debe tener exactamente 1 argumento' >&2
+    exit 1
+fi
+
+# Guardar la línea de 'who' con la información del usuario deseado
+user_info=$(who | grep -w "$1")
+if [ -z "$user_info" ]; then
+    echo 'error: el argumento no tuvo coincidencias' >&2
+    exit 1
+elif [ $(echo "$user_info" | wc -l) -ge 2 ]; then
+    echo 'error: el argumento coincide con más de un nombre' >&2
+    exit 1
+fi
+
+# Extraer horas y minutos de inicio de sesión
+log_time=$(echo "$user_info" | awk '{print $4}')
+log_hr=${log_time%%:*}
+log_min=${log_time##*:}
+
+# Convertir a enteros decimales
+log_hr=$((10#$log_hr))
+log_min=$((10#$log_min))
+
+# Extraer horas y minutos de la hora actual
+curr_time=$(date +%H:%M)
+curr_hr=${curr_time%%:*}
+curr_min=${curr_time##*:}
+
+# Calcular la diferencia entre la hora actual y la hora de inicio de sesión
+diff_hr=$((curr_hr - log_hr))
+diff_min=$((curr_min - log_min))
+
+# Si los minutos actuales son menores que los minutos de inicio de sesión, ajustar
+if [ $diff_min -lt 0 ]; then
+    diff_hr=$((diff_hr - 1))
+    diff_min=$((diff_min + 60))
+fi
+
+# Si la diferencia de horas es negativa, ajustar para el día anterior
+if [ $diff_hr -lt 0 ]; then
+    diff_hr=$((diff_hr + 24))
+fi
+
+# Imprimir el tiempo transcurrido desde el inicio de sesión
+printf "El tiempo transcurrido desde el inicio de sesión es: %d horas y %d minutos\n" \
+    $diff_hr \
+    $diff_min

@@ -1,0 +1,65 @@
+
+# Agrega una opción -f a mon para que verifique periódicamente la existencia de un archivo (ya sea un archivo común o un directorio) en lugar de verificar si un usuario ha iniciado sesión. Así, al escribir:
+
+#mon -f /usr/spool/uucppublic/steve/newmemo &
+
+#se debería hacer que mon verifique periódicamente la existencia del archivo indicado e informe cuando este exista (ya sea mostrando un mensaje o por correo si también se selecciona la opción -m).
+
+check_file=false
+use_mail=false
+interval=60
+filename=""
+user=""
+
+while getopts "mt:f:" option; do
+    case "$option" in
+        f)
+            check_file=true
+            filename="$OPTARG"
+            ;;
+        m)
+            use_mail=true
+            ;;
+        t)
+            interval="$OPTARG"
+            ;;
+        \?)
+            echo "Uso: waitfor [-m] [-f archivo] [-t n] [usuario]"
+            echo "  -m   Notificar por correo electrónico"
+            echo "  -f   Verificar archivo en lugar de usuario"
+            echo "  -t   Verificar cada n segundos"
+            exit 1
+            ;;
+    esac
+done
+
+if ! $check_file; then
+    shift $((OPTIND - 1))
+    if [ -z "$1" ]; then
+        echo "¡Falta el nombre de usuario!"
+        exit 2
+    fi
+    user="$1"
+fi
+
+if $check_file; then
+    while [ ! -e "$filename" ]; do
+        sleep "$interval"
+    done
+    message="El archivo '$filename' existe"
+else
+    while ! who | awk '{print $1}' | grep -qx "$user"; do
+        sleep "$interval"
+    done
+    tty=$(who | awk -v usr="$user" '$1 == usr { print $2; exit }')
+    message="$user ha iniciado sesión en $tty"
+fi
+
+if $use_mail; then
+    recipient=$(whoami)
+    echo "$message" | mail "$recipient"
+else
+    echo "$message"
+fi
+
+

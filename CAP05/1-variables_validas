@@ -1,0 +1,38 @@
+
+#¿Cuáles de los siguientes son nombres de variables válidos?
+
+#Validas
+XxXxXx	
+#Empieza con letra y solo usa letras.
+
+file_name	
+#Letra inicial, luego letras y «_».
+
+file1	
+#Letra inicial, luego letras y dígito.
+
+_	
+#El guion bajo es un inicio permitido y no hay más caracteres.
+
+HOMEDIR	
+#Solo letras mayúsculas.
+
+_date	
+#Empieza con «_», sigue con letras.
+
+Slimit	
+#Letra inicial, resto letras.
+
+
+
+#Inválidas
+12345	
+#Comienza con un dígito.
+
+file.name	
+#El punto «.» no está permitido.
+
+x0-9	
+#Contiene un guion «-», carácter inválido aquí.
+
+

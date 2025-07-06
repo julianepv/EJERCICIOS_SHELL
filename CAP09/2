@@ -1,0 +1,68 @@
+
+# # Modifica el programa waitfor para que también imprima el número de tty 
+# al que el usuario inicia sesión. Es decir, la salida debería decir:
+
+# sandy logged onto tty13
+# si sandy inicia sesión en tty13.
+
+
+mailopt=FALSE
+interval=60
+
+
+# procesar opciones del comando
+
+while getopts mt: option
+do
+    case "$option" in
+	m)  mailopt=TRUE;;
+	t)  interval=$OPTARG;;
+	\?) echo "Uso: waitfor [-m] [-t n] usuario"
+	    echo " -m significa ser notificado por correo"
+	    echo " -t significa verificar cada n segundos."
+	    exit 1;;
+    esac
+done
+
+
+
+# Asegurarse de que se haya especificado un nombre de usuario
+
+if [ "$OPTIND" -gt "$#" ]
+then
+    echo "¡Falta el nombre de usuario!"
+    exit 2
+fi
+
+shiftcount=$((OPTIND - 1))
+shift $shiftcount
+user=$1
+
+
+
+
+# Verificar si el usuario inicia sesión
+
+until who | grep "^$user " > /dev/null
+do
+    sleep $interval
+done
+
+
+
+
+# Al llegar a este punto, el usuario ha iniciado sesión
+
+tty=$(who | grep $user | sed 's/^[^[:space:]]* *\([^[:space:]]*\).*$/\1/')
+
+if [ "$mailopt" = FALSE ]
+then
+    echo "$user logged onto $tty"
+else
+    runner=$(who am i | cut -c1-8)
+    echo "$user logged onto $tty" | mail $runner
+fi
+
+
+
+

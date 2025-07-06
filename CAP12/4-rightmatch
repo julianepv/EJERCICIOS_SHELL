@@ -1,0 +1,35 @@
+# Escriba una función llamada rightmatch que acepte dos argumentos, como se muestra: rightmatch valor patrón, donde valor es una secuencia de uno o más caracteres y patrón es un patrón de shell que se eliminará del lado derecho de valor. El patrón coincidente más corto se eliminará de valor y el resultado se escribirá en la salida estándar.
+
+if [ $# -ne 2 ]
+then
+    echo "Uso: Right esta esperando 2 argumentos "
+    exit 1
+
+fi
+resultado=${1%$2}
+
+if [ -f "$resultado" ]
+then
+
+echo "$resultado archivo existe"
+
+
+elif [ -d "$resultado" ]
+then
+
+    echo "$resultado el directorio si existe "
+
+
+elif [ -e "$resultado" ]
+then
+
+   echo "$resultado existe en  el directorio actual "
+
+else
+
+
+ echo "$resultado no existe en  el directorio actual "
+fi
+
+
+echo $resultado

@@ -1,0 +1,18 @@
+
+# Escriba un programa llamado isyes que devuelva un estado de salida de 0 si su argumento es "sí" y de 1 en caso contrario. Para este ejercicio, considere y, sí, Sí, Sí e Y como argumentos válidos para "sí".
+
+if [ $# -ne 1 ]
+then
+    echo 'error: debe tener exactamente 1 argumento' >&2
+    exit 1
+fi
+
+case $1 in
+    y)   exit 0;;
+    yes) exit 0;;
+    Yes) exit 0;;
+    YES) exit 0;;
+    Y)   exit 0;;
+esac
+
+exit 1

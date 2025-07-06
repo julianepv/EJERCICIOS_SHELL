@@ -1,0 +1,8 @@
+
+# Escriba un programa llamado suffix que renombre un archivo añadiendo los caracteres dados como segundo argumento al final del nombre del archivo dado como primer argumento.
+
+#Por lo tanto
+#suffix memo1.sv debería renombrar memo1 a memo1.sv.
+
+mv "$1" "$1$2"
+

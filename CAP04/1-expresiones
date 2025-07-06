@@ -1,0 +1,51 @@
+
+¿Qué corresponderá a las siguientes expresiones regulares?
+
+x*
+Detecta cualquier cantidad de repeticiones de la letra "x", incluyendo ninguna.
+
+[0-9]\{3\}
+Identifica una secuencia compuesta por exactamente tres dígitos numéricos.
+
+xx*
+Reconoce una "x" seguida de una o más apariciones opcionales de la misma letra.
+
+[0-9]\{3,5\}
+Localiza un conjunto de dígitos que puede tener entre tres y cinco caracteres numéricos.
+
+x\{1,5\}
+Busca entre una y cinco repeticiones continuas de la letra "x".
+
+[0-9]\{1,3\},[0-9]\{3\}
+Encuentra una parte numérica de hasta tres dígitos, seguida por una coma, y luego tres dígitos exactos.
+
+x\{5,\}
+Detecta cinco o más repeticiones seguidas de la letra "x".
+
+^\...
+Señala líneas que inician con cualquier tres caracteres, sin importar cuáles sean.
+
+x\{10\}
+Reconoce exactamente diez letras "x" consecutivas.
+
+[A-Za-z_][A-Za-z_0-9]*
+Identifica nombres que comienzan con una letra o guion bajo y continúan con letras, números o guiones bajos.
+
+[0-9]
+Ubica cualquier carácter que sea un dígito del 0 al 9.
+
+\([A-Za-z0-9]\{1,\}\)\1
+Encuentra una secuencia alfanumérica que se repite de forma inmediata justo después de sí misma.
+
+[0-9]*
+Permite detectar cualquier cantidad de dígitos, incluyendo la posibilidad de que no haya ninguno.
+
+^Begin$
+Verifica si una línea contiene solamente la palabra "Begin", sin nada antes ni después.
+
+[0-9][0-9][0-9]
+Detecta secuencias de tres dígitos seguidos sin interrupciones.
+
+^\(.\).*\1$
+Revisa si el primer y el último carácter de una línea son exactamente iguales.
+

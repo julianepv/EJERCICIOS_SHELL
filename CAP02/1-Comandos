@@ -1,0 +1,33 @@
+
+#¿Cuál sería el resultado de los siguientes comandos?
+
+echo *	
+#Todos los nombres visibles del directorio actual (cualquier longitud, cualquier extensión).
+
+echo *[!0‑9]	
+#Archivos o carpetas cuyo último carácter no es un dígito (0 – 9).
+
+echo m[a-df-z]*	
+#Nombres que empiezan por “m”, seguido de una letra entre a–d o f–z (se omite la e), y luego cualquier cosa.
+
+echo [A‑Z]*	
+#Archivos que comienzan con una mayúscula ASCII (A–Z).
+
+echo jan*	
+#Todo lo que empiece por jan (útil para agrupar semanas o años).
+
+echo *.*	
+#Nombres que contienen al menos un punto con texto a ambos lados (extensiones típicas).
+
+echo ?????	
+#Cualquier nombre de exactamente 5 caracteres (cinco signos de interrogación = cinco posiciones).
+
+echo *02	
+#Archivos que terminan en “02” (antes puede haber cualquier texto).
+
+echo jan?? feb?? mar??	
+#Tres patrones separados por espacios: cada uno busca jan, feb o mar más exactamente dos caracteres adicionales.
+
+echo [fjm][ae][bnr]*	
+#Nombres cuyo 1.ᵃ letra es f, j o m; 2.ᵃ es a o e; 3.ᵃ es b, n o r; y luego lo que sea.
+

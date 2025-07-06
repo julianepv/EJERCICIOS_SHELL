@@ -1,0 +1,20 @@
+
+# Escriba un programa llamado t que muestre la hora en formato a.m. o p.m., en lugar de en formato de 24 horas. A continuación, se muestra un ejemplo de t ejecutándose de noche:
+
+time=$(date | cut -c12-16)
+hour=$(echo $time | cut -c1-2)
+min=$(echo $time | cut -c4-5)
+hour=$((10#$hour))
+
+if [ $hour -eq 0 ]
+then
+    echo "12:$min am"
+elif [ $hour -le 11 ]
+then
+    echo "$hour:$min am"
+elif [ $hour -eq 12 ]
+then
+    echo "12:$min pm"
+else
+    echo "$((hour - 12)):$min pm"
+fi

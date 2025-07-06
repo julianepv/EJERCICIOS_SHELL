@@ -1,0 +1,4 @@
+#a. Busque todos los usuarios conectados con nombres de usuario de al menos cuatro caracteres.
+
+who | cut -d ' ' -f1 | grep -E '^.{4,}' | sort -u
+

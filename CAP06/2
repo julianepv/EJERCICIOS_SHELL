@@ -1,0 +1,17 @@
+
+#Escribe los comandos para eliminar todos los espacios almacenados en la variable de shell "text". Asegúrate de asignar el resultado de vuelta a "text". Primero usa "tr" para hacerlo y luego haz lo mismo con "sed".I
+
+
+text='a b  c    d'
+
+text=$(echo "$text" | tr -d ' ')
+
+echo "$text"
+
+
+
+text='a b  c    d'
+
+text=$(echo "$text" | sed 's/ *//g')
+
+echo "$text"

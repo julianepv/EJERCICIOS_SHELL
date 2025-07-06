@@ -1,0 +1,32 @@
+
+# Escriba un programa llamado home que tome el nombre de un usuario como único argumento e imprima su directorio personal.
+# home mendoza2025
+# imprimiria
+# home/mendoza2025
+
+# Si /users/mendoza2025 es el directorio personal de Paola. (Pista: Recuerda que el directorio personal es el sexto campo almacenado en el archivo /etc/passwd).
+
+
+## ¿Qué ocurre si se escribe un valor no entero? ¿Qué ocurre si se omite el argumento?
+# Verifica que se haya pasado un argumento
+if [ $# -ne 1 ]; then
+    echo "Uso: $0 nombre_de_usuario"
+    exit 1
+fi
+
+
+# Almacena el nombre de usuario en una variable
+usuario="$1"
+
+
+# Busca el directorio home del usuario en /etc/passwd y lo imprime
+home_dir=$(grep "^$usuario:" /etc/passwd | cut -d : -f6)
+
+
+# Verifica si se encontró el directorio home
+if [ -z "$home_dir" ]; then
+    echo "El usuario '$usuario' no existe."
+else
+    echo "$home_dir"
+fi
+

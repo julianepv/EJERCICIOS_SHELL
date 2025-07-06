@@ -1,0 +1,9 @@
+
+#a. Enumere el contenido del directorio de documentos.
+
+ docs=$HOME/documents
+ let=$docs/letters
+ prop=$docs/proposals
+
+
+ls $docs

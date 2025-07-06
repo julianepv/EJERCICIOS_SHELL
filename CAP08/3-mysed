@@ -1,0 +1,14 @@
+
+# Escriba un programa llamado mysed que aplique el script sed dado como primer argumento al archivo dado como segundo. Si la ejecución sed tiene éxito (es decir, el estado de salida es cero), reemplace el archivo original con el modificado. Por lo tanto, mysed '1,10d' text usará sed para eliminar las primeras 10 líneas de text y, si tiene éxito, reemplazará text con el archivo modificado.
+
+if [ $# -ne 2 ]
+then
+    echo 'error: Ingresa 2 argumentos' >&2
+    exit 1
+fi
+
+# Note: error handling handled by sed
+if $(sed "$1" "$2" > /tmp/mysed)
+then
+    mv /tmp/mysed $2
+fi

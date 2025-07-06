@@ -1,0 +1,8 @@
+
+#c. Mueva todos los archivos cuyos nombres contengan una letra mayúscula del directorio de letras al directorio actual.
+
+ docs=$HOME/documents
+ let=$docs/letters
+ prop=$docs/proposals
+
+mv $let/*[A-Z]*

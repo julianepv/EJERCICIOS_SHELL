@@ -1,0 +1,28 @@
+
+¿Cuál será el efecto de los siguientes comandos?
+
+who | grep 'mary'
+Filtra la salida de who para mostrar solo las sesiones en las que aparece el nombre “mary” en cualquier parte de la línea.
+
+who | grep '^mary'
+Presenta únicamente las sesiones cuyo nombre de usuario comienza exactamente con “mary”.
+
+grep '[Uu]nix' ch?/*
+Busca apariciones de la palabra “Unix” o “unix” dentro de todos los archivos almacenados en directorios cuyo nombre coincide con ch?.
+
+ls -l | sort +4n
+Lista los archivos en formato detallado y ordena el resultado por la quinta columna (tamaño) en forma numérica ascendente.
+
+sed '/^$/d' text > text.out
+Elimina las líneas en blanco del archivo text y guarda el resultado depurado en text.out.
+
+sed 's/\([Uu]nix\)/\1(TM)/g' text > text.out
+Añade la marca “(TM)” a cada ocurrencia de “Unix” o “unix” dentro del archivo text, escribiendo la versión modificada en text.out.
+
+date | cut -c12-16
+Extrae los caracteres 12 a 16 del comando date, obteniendo la hora actual en formato HH:MM.
+
+date | cut -c5-11,25- | sed 's/\([0-9]\{1,2\}\)/\1,/'
+Reformatea la fecha del sistema para mostrar “Mes Día, Año”, insertando una coma tras el número del día.
+
+

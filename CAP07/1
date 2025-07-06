@@ -1,0 +1,4 @@
+
+# Modifique lu para que ignore mayúsculas y minúsculas al realizar la búsqueda.
+
+grep -i "$1" phonebook

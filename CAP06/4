@@ -1,0 +1,6 @@
+
+# Escriba los comandos para asignar las líneas únicas en los nombres de archivo a la variable de shell namelist.
+
+namelist=$(cat names | sort -u)
+
+echo "$namelist"

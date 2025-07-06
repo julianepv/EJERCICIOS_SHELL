@@ -1,0 +1,4 @@
+
+# ¿Qué ocurre si se olvida proporcionar un argumento al programa lu? ¿Qué ocurre si el argumento es nulo (por ejemplo, lu "")?
+
+echo "Respuesta: En ambos casos grep coincide con todo y, en consecuencia, toda la libreta telefónica se escribe en la salida estándar."I

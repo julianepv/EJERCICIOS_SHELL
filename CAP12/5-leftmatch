@@ -1,0 +1,33 @@
+
+# Escriba una función llamada leftmatch que funcione de manera similar a la función rightmatch desarrollada en el Ejercicio 4.
+
+if [ $# -ne 2 ]
+then
+    echo "Uso: El programa esta esperando que ingreses 2 argumentos"
+    exit 1
+fi
+resultado=${2#$1}
+echo $resultado
+
+if [ -f "$resultado" ]
+ then
+
+ echo "$resultado El archivo existe"
+
+
+elif [ -d "$resultado" ]
+ then
+
+ echo "$resultado El directorio si existe"
+
+
+elif [ -e "$resultado" ]
+ then
+
+ echo "$resultado existe en el directorio actual"
+
+ else
+
+
+ echo "$resultado no existe en el directorio actual"
+ fi

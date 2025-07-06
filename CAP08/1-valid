@@ -1,0 +1,16 @@
+
+# Escriba un programa llamado válido que imprima "sí" si su argumento es un nombre de variable de shell válido y "no" en caso contrario:
+
+if [ $# -ne 1 ]
+then
+    echo 'error: must have exactly 1 argument' >&2
+    exit 1
+fi
+
+
+if echo "$1" | grep '^[[:alpha:]_][[:alnum:]_]*$' > /dev/null
+then
+    echo yes
+else
+    echo no
+fi

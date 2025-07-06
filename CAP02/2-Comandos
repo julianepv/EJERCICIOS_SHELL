@@ -1,0 +1,34 @@
+
+#¿Cuál es el efecto de las siguientes secuencias de comandos?
+
+ls | wc -l    
+#Imprime el número de archivos no ocultos en el directorio actual en la salida estándar.
+
+rm ????       
+#Elimina cualquier archivo no oculto en el directorio actual cuyo nombre de archivo sea 4.
+
+who | wc -l   I
+#mprime el número de usuarios conectados.
+
+mv progs/* /users/steve/backup    
+#Mueve todos los archivos del directorio progs a /users/steve/backup
+
+ls *.c | wc -l   
+#Imprime el número de archivos en el directorio actual que terminan en .c.
+
+rm *.o     
+#Elimina cualquier archivo en el directorio actual que termine en .o.
+
+who | sort    
+#Imprime una lista ordenada de los usuarios conectados, con información adicional en cada línea.
+
+cd; pwd     
+#Cambia el directorio a "home" e imprime su ubicación absoluta.
+
+cp memo1 ..      
+#Si existe un archivo llamado "memo" en el directorio actual, crea una copia de este archivo con el mismo nombre y colócala en ..
+
+plotdata 2>errors &      
+#Intenta ejecutar un comando llamado plotdata en segundo plano. Cualquier dato escrito en la salida estándar se redirige a un archivo llamado "errors".I
+
+

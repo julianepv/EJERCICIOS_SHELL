@@ -1,0 +1,20 @@
+
+# El programa de este capítulo tiene una deficiencia como se muestra en el siguiente ejemplo:
+
+# $ ison ed
+# fred     tty03    Sep  4 14:53
+# $
+
+
+# El resultado indica que fred ha iniciado sesión, mientras comprobábamos si ed lo había hecho. Modifique ison para corregir este problema.
+
+
+if [ -z "$1" ]; then
+    echo "Uso: Ingresa un nombre de usuario a buscar"
+    exit 1
+fi
+
+who | grep -i "^$1 "
+
+
+

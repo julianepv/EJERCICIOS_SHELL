@@ -1,0 +1,7 @@
+
+#Escribe un programa llamado nf para mostrar la cantidad de archivos en tu directorio actual. Escribe el programa y pruébalo.
+
+ls | wc -l
+
+
+

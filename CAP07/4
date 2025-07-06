@@ -1,0 +1,44 @@
+
+# Escriba un programa llamado "two" que tome un único argumento entero y duplique su valor:
+
+# $ twice 15
+# 30
+# $ twice 0
+# 0
+# $
+
+
+if [ -z "$1" ]; then
+    echo "Error: No se proporcionó ningún argumento."
+    exit 1
+fi
+
+
+# Verifica si el argumento es un número entero válido
+
+if ! [[ "$1" =~ ^-?[0-9]+$ ]]; then
+    # Si el argumento es alfabético, devuelve 0
+    if [[ "$1" =~ ^[a-zA-Z]+$ ]]; then
+        echo 0
+    else
+        echo "Error: El argumento debe ser un número entero."
+        exit 1
+    fi
+fi
+
+
+
+# Si el argumento es válido, duplica su valor
+
+result=$(($1 * 2))
+echo $result
+
+
+
+# ¿Qué sucede si se escribe un valor no entero? ¿Y si se omite el argumento?
+#Si se ingresa un valor no entero, entonces devolverá 0 si todos los
+#caracteres son alfabéticos; de lo contrario, lanzará un error de sintaxis. Si se
+#omite el argumento, entonces se lanza un error de sintaxis.
+
+echo $(($1 * 2))
+

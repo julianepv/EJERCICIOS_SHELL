@@ -1,0 +1,8 @@
+
+#b. Copie todos los archivos del directorio de cartas al directorio de propuestas.
+
+ docs=$HOME/documents
+ let=$docs/letters
+ prop=$docs/proposals
+
+cp $let/* $prop

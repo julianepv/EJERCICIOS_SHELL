@@ -1,0 +1,17 @@
+
+# Modifique el programa prargs para que cada argumento vaya precedido de su número. Por lo tanto, al escribir
+
+# prargs a 'b c' d
+# se obtendrá el siguiente resultado:
+# 1: a
+# 2: b c
+# 3: d
+
+
+argnum=1
+
+for arg in "$@"
+do
+    echo "$argnum: $arg"
+        ((argnum++))
+done

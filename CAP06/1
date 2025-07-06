@@ -1,0 +1,113 @@
+
+#Se le asignaron las siguientes tareas:
+
+cd testdir
+
+x=*
+y=?
+z='one
+two
+three'
+now=$(date)
+symbol='>'
+
+
+printf '\nPresiona enter para ejecutar:  echo *** error ***'
+read user_input
+echo *** error ***
+
+
+printf "\nPresiona enter para ejecutar:  echo '¿Es 5 * 4 > 18?'"
+read user_input
+echo '¿Es 5 * 4 > 18?'
+
+
+printf '\nPresiona enter para ejecutar:  echo $x'
+read user_input
+echo $x
+
+
+printf '\nPresiona enter para ejecutar:  echo ¿Cuál es tu nombre?'
+read user_input
+echo ¿Cuál es tu nombre?
+
+
+printf '\nPresiona enter para ejecutar:  echo $y'
+read user_input
+echo $y
+
+
+printf '\nPresiona enter para ejecutar:  echo ¿Te gustaría jugar un juego?'
+read user_input
+echo ¿Te gustaría jugar un juego?
+
+
+printf '\nPresiona enter para ejecutar:  echo "$y"'
+read user_input
+echo "$y"
+
+
+printf '\nPresiona enter para ejecutar:  echo \*\*\*'
+read user_input
+echo \*\*\*
+
+
+printf '\nPresiona enter para ejecutar:  echo $z | wc -l'
+read user_input
+echo $z | wc -l
+
+
+printf '\nPresiona enter para ejecutar:  echo \$$symbol'
+read user_input
+echo echo \$$symbol
+
+
+printf '\nPresiona enter para ejecutar:  echo "$z" | wc -l'
+read user_input
+echo "$z" | wc -l
+
+
+printf '\nPresiona enter para ejecutar:  echo $\$symbol'
+read user_input
+echo $\$symbol
+
+
+printf "\nPresiona enter para ejecutar:  echo '\$z' I wc -l"
+read user_input
+echo '$z' I wc -l
+
+
+printf '\nPresiona enter para ejecutar:  echo "\\"'
+read user_input
+echo '*** No se ejecuta porque deja una comilla abierta ***'
+
+
+printf '\nPresiona enter para ejecutar:  echo _$now_'
+read user_input
+echo _$now_
+
+
+printf '\nPresiona enter para ejecutar:  echo "\\\\"'
+read user_input
+echo "\\"
+
+
+printf '\nPresiona enter para ejecutar:  echo hola $symbol fuera'
+read user_input
+echo hola $symbol fuera
+
+
+printf '\nPresiona enter para ejecutar:  echo \\\\'
+read user_input
+echo \\
+
+
+printf '\nPresiona enter para ejecutar:  echo "\\""'
+read user_input
+echo "\""
+
+
+printf "\nPresiona enter para ejecutar:  echo No entiendo"
+read user_input
+echo '*** No se ejecuta porque deja una comilla abierta ***\n'
+

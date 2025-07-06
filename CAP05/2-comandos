@@ -1,0 +1,19 @@
+
+#¿Cuál sería el efecto de los siguientes comandos?
+
+a. ls $let/..
+#Muestra el contenido del directorio padre de la ruta almacenada en $let.
+
+b. cat $prop/sys.A >> $let/no.JSK
+#Toma el archivo sys.A que se encuentra dentro de $prop y añade su contenido (sin sobrescribir) al archivo no.JSK dentro de $let. Si no.JSK no existe, lo crea.
+
+c. echo $let/*
+#Expande el comodín * para enumerar todos los nombres de archivos y subdirectorios dentro de $let, y los imprime en una sola línea separados por espacios.
+
+d. cp $let/no.JSK $progs
+#Copia el archivo no.JSK desde el directorio $let al directorio indicado por $progs, preservando su nombre.
+
+e. cd $prop
+#Cambia el directorio de trabajo actual al que señala la variable $prop, de modo que los comandos posteriores se ejecuten desde allí.
+
+
