@@ -1,0 +1,51 @@
+# Escribe un programa llamado recolectar que se ejecute en segundo plano y cuente
+# el número de usuarios conectados al final de cada intervalo y también el número
+# de procesos ejecutados durante ese intervalo. Permite que el intervalo se
+# especifique con una opción -t (ver el ejercicio anterior), con un valor
+# predeterminado de 10 minutos. Utiliza el hecho de que la variable especial
+# del shell $! se establece con el número de proceso del último comando ejecutado
+# en segundo plano y que
+#
+#       : &
+#
+# ejecuta un comando nulo en segundo plano. También asegúrate de que el programa
+# maneje correctamente el caso en que el número de proceso vuelva a 1 después
+# de alcanzar el máximo.
+#
+# Así que
+#
+#       recolectar -t 900 > estadisticas &
+#
+# debería iniciar recolectar para recopilar las estadísticas deseadas cada 15
+# minutos y escribirlas en el archivo estadisticas.
+
+
+# Nota del autor original: No entiendo por qué usaría la variable $! y el comando
+# : &, así que estoy ignorando esta instrucción. También estoy ignorando la
+# instrucción de verificar el desbordamiento del número de proceso.
+
+intervalo=600
+
+# Procesar las opciones de la línea de comandos
+while getopts t: opcion
+do
+    case "$opcion" in
+
+	t)  intervalo=$OPTARG;;
+
+	\?) echo "Uso: recolectar [-t n]"
+	    echo " -t significa verificar cada n segundos."
+	    exit 1;;
+    esac
+done
+
+# Bucle infinito; termínalo manualmente (ej. con Ctrl+C)
+while :
+do
+    echo "$(date)"
+    echo "$(ps | wc -l) procesos"
+    echo "$(who | wc -l) usuarios"
+    echo ""
+
+    sleep $intervalo
+done
