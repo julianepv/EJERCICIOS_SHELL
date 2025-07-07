@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Función que convierte números octales (base 8) a decimales (base 10)
+# y los imprime uno por línea.
+#
+# Ejemplo de uso:
+#   $ octal 10 11 12
+#   8
+#   9
+#   10
+
+octal() {
+    for num in "$@"
+    do
+        # Usa base 8 para interpretar el número
+        echo $((8#$num))
+    done
+}
+

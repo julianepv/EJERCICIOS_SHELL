@@ -1,0 +1,66 @@
+#!/bin/bash
+
+CDHIST[0]=$PWD
+
+# uso:
+#
+#     cdh -l          <-- muestra el historial numerado de directorios
+#     cdh ruta        <-- se cambia al directorio indicado por ruta
+#     cdh -n          <-- se cambia al enésimo directorio del historial
+
+cdh ()  {
+
+    typeset -i cdlen i
+
+    if [ $# -eq 0 ]                     # por defecto se va a HOME si no hay argumentos
+    then
+	set -- $HOME
+    fi
+
+    cdlen=${#CDHIST[*]}                 # número de elementos en CDHIST
+
+    # Nota: hay cinco casos de 'cd' que corresponden a cualquier entrada que no sea un guion
+    # seguido de una secuencia de enteros: (i) una cadena vacía, (ii) cualquier caso que
+    # tenga un carácter no entero o guion, (iii) cualquier guion que sigue a un entero,
+    # (iv) cualquier entero que no sigue a un guion, y (v) un guion simple.
+    case "$@" in
+
+	-l)                             # imprimir lista de directorios
+	    i=0
+	    while ((i < cdlen))
+	    do
+		printf "%3d %s\n" $i "${CDHIST[i]}"
+		((i = i + 1))
+	    done
+	    return ;;
+
+	''|*[!-0-9]*|*[0-9]-*|[0-9]*|-) # cd a nuevo directorio
+	    cd "$@" ;;
+
+	*)                              # cd a directorio en la lista
+            # eliminar guion inicial
+	    i=${1#-}
+	    if [ $i -lt $cdlen ]
+	    then
+		cd "${CDHIST[i]}" 
+	    else
+		echo "error: el índice $i está fuera de rango" >&2
+	    fi ;;
+    esac
+
+    # Si el directorio ya está en el historial, salimos sin agregarlo nuevamente.
+    # El límite superior es debido a que el caso -n solo maneja dígitos del 0 al 99
+    ((i = cdlen - 1))
+    while ((0 <= i))
+    do
+	if [ "$PWD" = "${CDHIST[i]}" ]
+	then
+	    return 
+	fi
+	((i = i - 1))
+    done
+
+    # Si llegamos aquí, entonces el directorio no está aún en el historial; lo agregamos
+    CDHIST[cdlen]="$PWD"
+}
+

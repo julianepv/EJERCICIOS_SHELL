@@ -1,0 +1,143 @@
+#!/bin/bash
+
+CDHIST[0]=$PWD
+
+# Toma un patrón como $1 e intenta hacer coincidencia usando grep contra los elementos en
+# $CDHIST. Si se encuentra exactamente 1 coincidencia, cambia a ese directorio; de lo contrario,
+# devuelve 1.
+
+cd_por_patron () {
+
+    typeset match_idx dir_pattern="${1#-}"
+    typeset -i i cdlen=${#CDHIST[*]}
+
+    # Recorre $CDHIST y verifica cada directorio en busca de coincidencias con
+    # $dir_pattern. Cada vez que haya una coincidencia, agrega el índice
+    # a $match_idx.
+    ((i = 0))
+    while ((i < cdlen))
+    do
+	if grep "$dir_pattern" <<< "${CDHIST[i]}" > /dev/null
+	then
+	    match_idx=$(echo "$match_idx $i")
+	fi
+	((i = i + 1))
+    done
+    
+    # Establece los parámetros posicionales con los índices de coincidencias
+    set -- $match_idx
+
+    # Cambia de directorio si hay exactamente una coincidencia, muestra error en caso contrario
+    if [ $# -eq 0 ]
+    then
+	echo "error: no se encontraron coincidencias para $dir_pattern" >&2
+	return 1
+    elif [ $# -ge 2 ]
+    then
+	echo "error: se encontraron múltiples coincidencias para $dir_pattern" >&2
+	for idx
+	do
+	    echo "${CDHIST[idx]}"
+	done
+	return 1
+    else
+	cd "${CDHIST[match_idx]}"
+	return 0
+    fi
+}
+
+# Toma la primera coincidencia de $1 en $PWD y la reemplaza por $2 usando sed.
+# Si existe dicha coincidencia, intenta cambiar a ese directorio, de lo contrario devuelve 1.
+
+sustitucion_korn () {
+
+    typeset viejo="$1"
+    typeset nuevo="$2"
+
+    nueva_ruta=$(sed "s/$viejo/$nuevo/" <<< "$PWD")
+    if [ "$nueva_ruta" = "$PWD" ]
+    then
+	echo "error: la cadena $viejo no coincide con $PWD" >&2
+	return 1
+    fi
+
+    cdh "$nueva_ruta"
+}
+
+# Uso:
+#
+#     cdh -l            <-- muestra el historial numerado de directorios
+#     cdh ruta          <-- cambia al directorio especificado
+#     cdh -n            <-- cambia al enésimo directorio del historial
+#     cdh -patron       <-- cambia al directorio en el historial que coincida con el patrón usando grep
+#     cdh viejo nuevo   <-- cambia al directorio obtenido al reemplazar la primera coincidencia
+#                          de "viejo" en $PWD con "nuevo", usando sed
+
+cdh ()  {
+
+    typeset -i cdlen i 
+    typeset match_idx
+
+    if [ $# -eq 0 ]                     # por defecto va al HOME si no hay argumentos
+    then
+	set -- $HOME
+    elif [ $# -eq 2 ]                   # emula sustitución parcial estilo Korn
+    then
+	sustitucion_korn $@
+	return
+    fi
+
+    cdlen=${#CDHIST[*]}                 # número de elementos en CDHIST
+
+    # Nota: hay cinco casos de 'cd' para entradas que no sean un guion seguido
+    # de una secuencia de enteros: (i) cadena vacía, (ii) cualquier caso con
+    # carácter no numérico o guion, (iii) cualquier guion después de número,
+    # (iv) número que no siga a guion, y (v) guion solo.
+    case "$@" in
+
+	-l)                             # muestra la lista de directorios
+	    i=0
+	    while ((i < cdlen))
+	    do
+		printf "%3d %s\n" $i "${CDHIST[i]}"
+		((i = i + 1))
+	    done
+	    return ;;
+
+	''|*[!-0-9]*|*[0-9]-*|[0-9]*|-) # cd por ruta o patrón
+
+	    case "$@" in
+		-?*)                    # busca coincidencia por patrón
+		    cd_por_patron "$@" 
+		    return ;;
+
+		*)                      # intenta cambiar directamente a la ruta
+		    cd "$@" ;;
+	    esac ;;
+
+	*)                              # cambia al directorio según índice
+	    i=${1#-}                   # elimina el guion inicial
+	    if [ $i -lt $cdlen ]
+	    then
+		cd "${CDHIST[i]}" 
+	    else
+		echo "error: el índice $i está fuera de rango" >&2
+	    fi ;;
+	
+    esac
+
+    # Si el directorio ya está en el historial, salir sin agregarlo de nuevo
+    ((i = cdlen - 1))
+    while ((0 <= i))
+    do
+	if [ "$PWD" = "${CDHIST[i]}" ]
+	then
+	    return 
+	fi
+	((i = i - 1))
+    done
+
+    # Si llegamos aquí, el directorio aún no está en el historial; lo agregamos
+    CDHIST[cdlen]="$PWD"
+}
+
