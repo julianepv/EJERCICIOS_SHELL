@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Modificar rolo para que una persona que ejecute el programa pueda mantener su
+# archivo de agenda en cualquier directorio y no solo en su directorio personal.
+# Esto se puede hacer requiriendo que el usuario establezca una variable exportada
+# llamada PHONEBOOK con el nombre del archivo de la agenda antes de ejecutar rolo.
+# Verifica que esta variable apunte a un archivo válido. Si la variable no está
+# definida, el programa debe asumir que el archivo de la agenda está en el
+# directorio personal del usuario, como antes.
+#
+# Aquí hay algunos ejemplos:
+#
+#       $ PHONEBOOK=/users/steve/personal lu Gregory
+#       Gregory	973-555-0370
+#       $ PHONEBOOK=/users/pat/phonebook lu Toritos
+#       El Toritos	973-555-2236
+#
+# En el ejemplo anterior, asumimos que al usuario steve se le ha concedido
+# acceso de lectura al archivo de agenda de pat.
+
+#
+# Verificar que $PHONEBOOK sea el nombre de un archivo válido.
+# Este script externo se encarga de la lógica de validación.
+#
+. ./set_phb_loc
+
+#
+# Establecer $PHB_STANDALONE a un valor no nulo le indica a los scripts
+# 'add', 'lu' y 'rem' que no necesitan verificar la validez del archivo
+# especificado por $PHONEBOOK durante el uso de 'rolo'.
+#
+PHB_STANDALONE=FALSE
+export PHB_STANDALONE
+
+#
+# Si se proporcionan argumentos al ejecutar, realizar una búsqueda directamente.
+#
+if [ "$#" -ne 0 ]
+then
+    ./lu "$@"
+    exit
+fi
+
+#
+# Iniciar un bucle que se repetirá hasta que el usuario elija salir.
+#
+salir="falso"
+until [ "$salir" = "verdadero" ]
+do
+    #
+    # Mostrar el menú de opciones.
+    #
+    printf '
+---------------------------------
+¿Qué te gustaría hacer?
+---------------------------------
+0. Salir del programa
+1. Buscar a alguien
+2. Añadir a alguien a la agenda
+3. Eliminar a alguien de la agenda
+Por favor, selecciona una de las opciones (0-3): '
+
+    #
+    # Leer y procesar la selección del usuario.
+    #
+    read opcion
+    echo
+
+    case "$opcion" in
+
+	0)  salir="verdadero";;
+
+	1)  printf "Ingresa el nombre a buscar: "
+	    read nombre
+	    ./lu "$nombre";;
+
+	2)  printf "Ingresa el nombre que será añadido: "
+	    read nombre
+	    printf "Ingresa el número de teléfono: "
+	    read numero
+	    ./add "$nombre" "$numero";;
+
+	3)  printf "Ingresa el nombre a eliminar: "
+	    read nombre
+	    ./rem "$nombre";;
+
+	*)  echo "Opción no válida";;
+
+    esac
+done

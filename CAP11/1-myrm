@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Escribe un programa llamado myrm que tome como argumentos los nombres de los archivos a eliminar.
+# Si la variable global MAXFILES está definida, tómala como el número máximo de archivos a
+# eliminar sin preguntar. Si la variable no está definida, usa 10 como máximo. Si el número
+# de archivos a eliminar excede esta cantidad, pide confirmación al usuario antes de
+# eliminar los archivos:
+#
+#   $ ls | wc -l
+#   25
+#
+#   $ myrm *
+#   ¿Eliminar 25 archivos (s/n)? n
+#   Archivos no eliminados.
+#
+#   $ MAXFILES=100 myrm *
+#   $ ls
+#                                     (Todos los archivos han sido eliminados)
+#
+# Si MAXFILES se establece en cero, la verificación de confirmación debe suprimirse.
+
+# Validar que se haya proporcionado al menos un archivo.
+if [ $# -eq 0 ]; then
+    echo "Uso: myrm Archivo..."
+    exit 1
+fi
+
+# Si MAXFILES no está definida, usar 10 como valor predeterminado.
+if [ -z "$MAXFILES" ]; then
+    MAXFILES=10
+fi
+
+# Validar que MAXFILES sea un entero no negativo.
+case $MAXFILES in
+    ''|*[!0-9]*)
+        echo "Error: se proporcionó un valor no numérico o negativo para MAXFILES."
+        exit 1
+        ;;
+esac
+
+lista_eliminar=""
+lista_faltantes=""
+num_a_eliminar=0
+
+# Separar los argumentos en archivos existentes y no existentes.
+while [ "$#" -gt 0 ]; do
+    if [ -f "$1" ]; then
+        lista_eliminar="$lista_eliminar $1"
+        num_a_eliminar=$((num_a_eliminar + 1))
+    else
+        lista_faltantes="$lista_faltantes $1"
+    fi
+    shift
+done
+
+# Manejar los archivos que no se encontraron.
+if [ -n "$lista_faltantes" ]; then
+    echo "Los siguientes archivos no existen:$lista_faltantes"
+    if [ -n "$lista_eliminar" ]; then
+        printf "¿Se deben eliminar los archivos restantes (s/n)? "
+        read respuesta
+        if [ "$respuesta" != "s" ]; then
+            echo "Archivos no eliminados."
+            exit 0
+        fi
+    else
+        echo "No quedan archivos para eliminar."
+        exit 0
+    fi
+fi
+
+# Comprobar si el número de archivos a eliminar excede el máximo permitido.
+# Esta comprobación se omite si MAXFILES es 0.
+if [ $num_a_eliminar -gt $MAXFILES ] && [ $MAXFILES -gt 0 ]; then
+    printf "¿Eliminar %s archivos (s/n)? " "$num_a_eliminar"
+    read respuesta
+    if [ "$respuesta" != "s" ]; then
+        echo "Archivos no eliminados."
+        exit 0
+    fi
+fi
+
+# Si hay archivos en la lista de eliminación, proceder a borrarlos.
+if [ $num_a_eliminar -gt 0 ]; then
+    rm $lista_eliminar
+    echo "Archivos eliminados."
+fi
