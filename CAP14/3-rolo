@@ -1,0 +1,176 @@
+#!/bin/bash
+
+#
+# rolo - rolodex program to look up, add,
+#        remove and change entries from the phone book
+#
+
+: ${PHONEBOOK:="$HOME/phonebook"}
+export PHONEBOOK
+if [ ! -e "$PHONEBOOK" ]
+then
+    echo "$PHONEBOOK does not exist!"
+    printf "Should I create it for you (y/n)? "
+    read answer
+
+    if [ "$answer" != y ]
+    then
+        exit 1
+    fi
+
+    > $PHONEBOOK || exit 1
+fi
+
+# Opciones de línea de comandos: -m (correo) y -f (archivo)
+if [ "$1" = "-m" ]
+then
+    if [ -z "$2" ]
+    then
+        echo "Uso: rolo -m nombre [-f archivo]"
+        exit 1
+    fi
+    
+    entry=$(grep -i "$2" "$PHONEBOOK")
+    if [ -z "$entry" ]
+    then
+        echo "No se encontró a $2 en la guía telefónica"
+        exit 1
+    fi
+    
+    email=$(echo "$entry" | grep -o 'mail:[^[:space:]]*' | cut -d: -f2)
+    if [ -z "$email" ]
+    then
+        printf "No se encontró email para $2. Ingresa el correo: "
+        read email
+    fi
+
+    # Enviar desde archivo (-f)
+    if [ "$3" = "-f" ] && [ -n "$4" ]
+    then
+        if [ ! -f "$4" ]
+        then
+            echo "Error: El archivo $4 no existe"
+            exit 1
+        fi
+        sendmail "$email" < "$4"
+        echo "Email enviado a $email usando el archivo $4"
+        exit 0
+    fi
+
+    # Modo editor interactivo (sin -f)
+    TEMP_MSG="/tmp/rolo_msg_$$.txt"
+    echo "To: $email" > "$TEMP_MSG"
+    echo "Subject: " >> "$TEMP_MSG"
+    echo "" >> "$TEMP_MSG"
+    ${EDITOR:-vi} "$TEMP_MSG"
+    
+    if [ -s "$TEMP_MSG" ]
+    then
+        sendmail "$email" < "$TEMP_MSG"
+        echo "Email enviado a $email"
+    else
+        echo "Mensaje vacío, no se envió el correo"
+    fi
+    rm -f "$TEMP_MSG"
+    exit 0
+fi
+
+# Búsqueda normal si se pasan argumentos
+if [ "$#" -ne 0 ]
+then
+    ./lu -i "$@"
+    exit
+fi
+
+# Menú interactivo
+trap "continue" 2
+
+while true
+do
+    printf '
+
+Would you like to:
+1. Look someone up
+2. Add someone to the phone book
+3. Remove someone from the phone book
+4. Change an entry in the phone book
+5. List all names and numbers in the phone book
+6. Send email to someone
+7. Exit this program
+Please select one of the above (1-7): '
+
+    read choice
+    echo
+    case "$choice" in
+
+        1) printf "Enter name to look up: "
+           read name
+           if [ -z "$name" ]
+           then
+               echo "Lookup ignored"
+           else
+               ./lu -i "$name"
+           fi;;
+
+        2) ./add;;
+
+        3) printf "Enter name to remove: "
+           read name
+           if [ -z "$name" ]
+           then
+               echo "Removal ignored"
+           else
+               ./rem -i "$name"
+           fi;;
+
+        4) printf "Enter name to change: "
+           read name
+           if [ -z "$name" ]
+           then
+               echo "Change ignored"
+           else
+               ./change -i "$name"
+           fi;;
+
+        5) ./listall;;
+
+        6) printf "Ingrese el nombre del destinatario: "
+           read name
+           if [ -z "$name" ]
+           then
+               echo "Operación cancelada"
+           else
+               entry=$(grep -i "$name" "$PHONEBOOK")
+               if [ -z "$entry" ]
+               then
+                   echo "No se encontró a $name en la guía"
+               else
+                   email=$(echo "$entry" | grep -o 'mail:[^[:space:]]*' | cut -d: -f2)
+                   if [ -z "$email" ]
+                   then
+                       printf "No hay email registrado. Ingresa el correo: "
+                       read email
+                   fi
+                   
+                   TEMP_MSG="/tmp/rolo_msg_$$.txt"
+                   echo "To: $email" > "$TEMP_MSG"
+                   echo "Subject: " >> "$TEMP_MSG"
+                   echo "" >> "$TEMP_MSG"
+                   ${EDITOR:-vi} "$TEMP_MSG"
+                   
+                   if [ -s "$TEMP_MSG" ]
+                   then
+                       sendmail "$email" < "$TEMP_MSG"
+                       echo "Correo enviado a $email"
+                   else
+                       echo "No se envió (mensaje vacío)"
+                   fi
+                   rm -f "$TEMP_MSG"
+               fi
+           fi;;
+
+        7) exit 0;;
+
+        *) echo "Bad choice";;
+    esac
+done

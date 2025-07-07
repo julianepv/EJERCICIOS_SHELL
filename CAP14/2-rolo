@@ -1,0 +1,191 @@
+#!/bin/bash
+
+#
+# rolo - rolodex program to look up, add,
+#        remove and change entries from the phone book
+#
+
+#
+# Set PHONEBOOK to point to the phone book file
+# and export it so other progs know about it
+# if it's set on entry, then leave it alone
+#
+
+: ${PHONEBOOK:="$HOME/phonebook"}
+export PHONEBOOK
+if [ ! -e "$PHONEBOOK" ]
+then
+    echo "$PHONEBOOK does not exist!"
+    printf "Should I create it for you (y/n)? "
+    read answer
+
+    if [ "$answer" != y ]
+    then
+	exit 1
+    fi
+
+    > $PHONEBOOK || exit 1    # exit if the creation fails
+fi
+
+#
+# Handle command line mail option
+#
+if [ "$1" = "-m" ]
+then
+    if [ -z "$2" ]
+    then
+        echo "Usage: rolo -m name"
+        exit 1
+    fi
+    
+    entry=$(grep -i "$2" "$PHONEBOOK")
+    if [ -z "$entry" ]
+    then
+        echo "No entry found for $2 in phonebook"
+        exit 1
+    fi
+    
+    email=$(echo "$entry" | grep -o 'mail:[^[:space:]]*' | cut -d: -f2)
+    if [ -z "$email" ]
+    then
+        printf "No email found for $2. Please enter email address: "
+        read email
+    fi
+    
+    TEMP_MSG="/tmp/rolo_msg_$$.txt"
+    echo "To: $email" > "$TEMP_MSG"
+    echo "Subject: " >> "$TEMP_MSG"
+    echo "" >> "$TEMP_MSG"
+    ${EDITOR:-vi} "$TEMP_MSG"
+    
+    if [ -s "$TEMP_MSG" ]
+    then
+        sendmail "$email" < "$TEMP_MSG"
+        echo "Email sent to $email"
+    else
+        echo "Message empty, email not sent"
+    fi
+    rm -f "$TEMP_MSG"
+    exit 0
+fi
+
+#
+# If arguments are supplied, then do a lookup
+#
+
+if [ "$#" -ne 0 ]
+then
+    ./lu -i "$@"
+    exit
+fi
+
+#
+# Set trap on interrupt (DELETE key) to continue the loop
+#
+
+trap "continue" 2
+
+#
+# Loop until user selects 'exit'
+#
+
+while true
+do
+
+    #
+    # Display menu
+    #
+
+    printf '
+
+Would you like to:
+1. Look someone up
+2. Add someone to the phone book
+3. Remove someone from the phone book
+4. Change an entry in the phone book
+5. List all names and numbers in the phone book
+6. Send email to someone
+7. Exit this program
+Please select one of the above (1-7): '
+
+    #
+    # Read and process selection
+    #
+
+    read choice
+    echo
+    case "$choice" in
+
+	1) printf "Enter name to look up: "
+	   read name
+	   if [ -z "$name" ]
+	   then
+	       echo "Lookup ignored"
+	   else
+	       ./lu -i "$name"
+	   fi;;
+
+	2) ./add;;
+
+	3) printf "Enter name to remove: "
+	   read name
+	   if [ -z "$name" ]
+	   then
+	       echo "Removal ignored"
+	   else
+	       ./rem -i "$name"
+	   fi;;
+
+	4) printf "Enter name to change: "
+	   read name
+
+	   if [ -z "$name" ]
+	   then
+	       echo "Change ignored"
+	   else
+	       ./change -i "$name"
+	   fi;;
+
+	5) ./listall;;
+
+	6) printf "Enter name to send email to: "
+	   read name
+	   if [ -z "$name" ]
+	   then
+	       echo "Email operation ignored"
+	   else
+	       entry=$(grep -i "$name" "$PHONEBOOK")
+	       if [ -z "$entry" ]
+	       then
+	           echo "No entry found for $name in phonebook"
+	       else
+	           email=$(echo "$entry" | grep -o 'mail:[^[:space:]]*' | cut -d: -f2)
+	           if [ -z "$email" ]
+	           then
+	               printf "No email found for $name. Please enter email address: "
+	               read email
+	           fi
+	           
+	           TEMP_MSG="/tmp/rolo_msg_$$.txt"
+	           echo "To: $email" > "$TEMP_MSG"
+	           echo "Subject: " >> "$TEMP_MSG"
+	           echo "" >> "$TEMP_MSG"
+	           ${EDITOR:-vi} "$TEMP_MSG"
+	           
+	           if [ -s "$TEMP_MSG" ]
+	           then
+	               sendmail "$email" < "$TEMP_MSG"
+	               echo "Email sent to $email"
+	           else
+	               echo "Message empty, email not sent"
+	           fi
+	           rm -f "$TEMP_MSG"
+	       fi
+	   fi;;
+
+	7) exit 0;;
+
+	*) echo "Bad choice";;
+
+    esac
+done

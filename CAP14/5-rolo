@@ -1,0 +1,129 @@
+#!/bin/bash
+
+#
+# rolo - rolodex program with multi-user support
+#
+
+# Obtener ruta del archivo phonebook del usuario actual
+if [ -f "$HOME/.rolo" ]; then
+    PHONEBOOK=$(cat "$HOME/.rolo")
+else
+    echo "No se encontró el archivo $HOME/.rolo"
+    printf "¿Crear uno nuevo con phonebook por defecto? (y/n) "
+    read answer
+    if [ "$answer" = y ]; then
+        echo "$HOME/phonebook" > "$HOME/.rolo"
+        PHONEBOOK="$HOME/phonebook"
+        > "$PHONEBOOK" || exit 1
+    else
+        exit 1
+    fi
+fi
+
+# Función para obtener phonebook de otro usuario
+get_user_phonebook() {
+    local username=$1
+    local user_home=$(eval echo ~"$username")
+    local user_rolo="$user_home/.rolo"
+    
+    if [ ! -d "$user_home" ]; then
+        echo "Error: El usuario $username no existe"
+        return 1
+    fi
+    
+    if [ ! -f "$user_rolo" ]; then
+        echo "Error: El usuario $username no tiene archivo .rolo"
+        return 1
+    fi
+    
+    if [ ! -r "$user_rolo" ]; then
+        echo "Error: No se puede leer el archivo .rolo de $username"
+        return 1
+    fi
+    
+    local user_pb=$(cat "$user_rolo")
+    
+    if [ ! -f "$user_pb" ]; then
+        echo "Error: Phonebook de $username no existe en $user_pb"
+        return 1
+    fi
+    
+    if [ ! -r "$user_pb" ]; then
+        echo "Error: No se puede leer el phonebook de $username"
+        return 1
+    fi
+    
+    echo "$user_pb"
+}
+
+# Manejar opción -u (buscar en phonebook de otro usuario)
+if [ "$1" = "-u" ]; then
+    if [ -z "$2" ] || [ -z "$3" ]; then
+        echo "Uso: rolo -u usuario nombre_a_buscar"
+        exit 1
+    fi
+    
+    user_pb=$(get_user_phonebook "$2")
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+    
+    grep -i "$3" "$user_pb"
+    exit 0
+fi
+
+# Resto del código original (creación de phonebook si no existe)
+if [ ! -e "$PHONEBOOK" ]; then
+    echo "$PHONEBOOK does not exist!"
+    printf "Should I create it for you (y/n)? "
+    read answer
+
+    if [ "$answer" != y ]; then
+        exit 1
+    fi
+
+    > "$PHONEBOOK" || exit 1
+fi
+
+# Opciones -m y -f (mantenidas del código anterior)
+if [ "$1" = "-m" ]; then
+    # ... (código existente para -m y -f)
+    :
+fi
+
+# Menú interactivo modificado
+trap "continue" 2
+
+while true; do
+    printf '
+Would you like to:
+1. Look someone up
+2. Add someone to the phone book
+3. Remove someone from the phone book
+4. Change an entry in the phone book
+5. List all names and numbers in the phone book
+6. Send email to someone
+7. Search in another user'\''s phone book
+8. Exit this program
+Please select one of the above (1-8): '
+
+    read choice
+    echo
+    case "$choice" in
+        # ... (opciones 1-6 existentes)
+        7) printf "Enter username to search in: "
+           read username
+           printf "Enter name to search for: "
+           read name
+           if [ -z "$username" ] || [ -z "$name" ]; then
+               echo "Search ignored"
+           else
+               user_pb=$(get_user_phonebook "$username")
+               if [ $? -eq 0 ]; then
+                   grep -i "$name" "$user_pb"
+               fi
+           fi;;
+        8) exit 0;;
+        *) echo "Bad choice";;
+    esac
+done

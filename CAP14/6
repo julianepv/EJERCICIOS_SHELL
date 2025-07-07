@@ -1,0 +1,3 @@
+¿Qué sucede con rolo si el usuario añade una entrada que contiene los caracteres ^ o [?
+
+El carácter ^ se interpreta como un salto de línea. El carácter [ (o cualquier otro carácter con significado especial para grep) causa problemas en el programa rem, ya que es un carácter especial en las búsquedas con grep, operación que el programa utiliza para eliminar entradas de la guía telefónica.

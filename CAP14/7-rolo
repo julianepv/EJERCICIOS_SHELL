@@ -1,0 +1,231 @@
+#!/bin/bash
+
+#
+# rolo - Rolodex program with multi-user support and email features
+#
+
+# Configuración del archivo phonebook
+if [ -f "$HOME/.rolo" ]; then
+    PHONEBOOK=$(cat "$HOME/.rolo")
+else
+    echo "No se encontró el archivo $HOME/.rolo"
+    printf "¿Crear uno nuevo con phonebook por defecto? (y/n) "
+    read answer
+    if [ "$answer" = y ]; then
+        echo "$HOME/phonebook" > "$HOME/.rolo"
+        PHONEBOOK="$HOME/phonebook"
+        > "$PHONEBOOK" || exit 1
+    else
+        exit 1
+    fi
+fi
+
+# Funciones auxiliares
+get_user_phonebook() {
+    local username=$1
+    local user_home=$(eval echo ~"$username")
+    local user_rolo="$user_home/.rolo"
+    
+    [ ! -d "$user_home" ] && { echo "Error: El usuario $username no existe"; return 1; }
+    [ ! -f "$user_rolo" ] && { echo "Error: El usuario $username no tiene archivo .rolo"; return 1; }
+    [ ! -r "$user_rolo" ] && { echo "Error: No se puede leer el archivo .rolo de $username"; return 1; }
+    
+    local user_pb=$(cat "$user_rolo")
+    [ ! -f "$user_pb" ] && { echo "Error: Phonebook de $username no existe"; return 1; }
+    [ ! -r "$user_pb" ] && { echo "Error: No se puede leer el phonebook de $username"; return 1; }
+    
+    echo "$user_pb"
+}
+
+send_rolo_entry() {
+    local recipient=$1
+    local entry_name=$2
+    
+    local entry=$(grep -i "$entry_name" "$PHONEBOOK")
+    [ -z "$entry" ] && { echo "Error: No se encontró '$entry_name'"; return 1; }
+
+    local recipient_email
+    if [[ "$recipient" == *@* ]]; then
+        recipient_email="$recipient"
+    else
+        recipient_email=$(getent passwd "$recipient" | cut -d: -f5 | cut -d, -f1)
+        [ -z "$recipient_email" ] && { 
+            printf "Ingrese email para %s: " "$recipient"
+            read recipient_email
+            [ -z "$recipient_email" ] && return 1
+        }
+    fi
+
+    local temp_mail="/tmp/rolo_mail_$$.txt"
+    echo "Subject: Entrada compartida del Rolodex: $entry_name" > "$temp_mail"
+    echo "To: $recipient_email" >> "$temp_mail"
+    echo "" >> "$temp_mail"
+    echo "Se ha compartido contigo esta entrada del rolodex:" >> "$temp_mail"
+    echo "$entry" >> "$temp_mail"
+    
+    if sendmail "$recipient_email" < "$temp_mail"; then
+        echo "Entrada enviada a $recipient_email"
+    else
+        echo "Error al enviar el correo"
+    fi
+    rm -f "$temp_mail"
+}
+
+# Manejo de opciones de línea de comandos
+case "$1" in
+    -u) # Buscar en phonebook de otro usuario
+        [ -z "$2" ] || [ -z "$3" ] && {
+            echo "Uso: rolo -u usuario nombre_a_buscar"
+            exit 1
+        }
+        user_pb=$(get_user_phonebook "$2") || exit 1
+        grep -i "$3" "$user_pb"
+        exit $?
+        ;;
+        
+    -m) # Enviar correo (modo editor)
+        [ -z "$2" ] && {
+            echo "Uso: rolo -m nombre [-f archivo]"
+            exit 1
+        }
+        entry=$(grep -i "$2" "$PHONEBOOK") || {
+            echo "No se encontró a $2"; exit 1
+        }
+        
+        email=$(echo "$entry" | grep -o 'mail:[^[:space:]]*' | cut -d: -f2)
+        [ -z "$email" ] && {
+            printf "No hay email para $2. Ingrese correo: "
+            read email
+            [ -z "$email" ] && exit 1
+        }
+
+        if [ "$3" = "-f" ] && [ -n "$4" ]; then
+            [ -f "$4" ] || { echo "Archivo $4 no existe"; exit 1; }
+            sendmail "$email" < "$4" && echo "Email enviado usando $4"
+        else
+            TEMP_MSG="/tmp/rolo_msg_$$.txt"
+            echo "To: $email" > "$TEMP_MSG"
+            echo "Subject: " >> "$TEMP_MSG"
+            echo "" >> "$TEMP_MSG"
+            ${EDITOR:-vi} "$TEMP_MSG"
+            
+            if [ -s "$TEMP_MSG" ]; then
+                sendmail "$email" < "$TEMP_MSG" && echo "Email enviado"
+            else
+                echo "No se envió (mensaje vacío)"
+            fi
+            rm -f "$TEMP_MSG"
+        fi
+        exit 0
+        ;;
+        
+    -s) # Compartir entrada por correo
+        [ -z "$2" ] || [ -z "$3" ] && {
+            echo "Uso: rolo -s destinatario nombre_entrada"
+            exit 1
+        }
+        send_rolo_entry "$2" "$3"
+        exit $?
+        ;;
+        
+    -*) # Opción no válida
+        echo "Opción no reconocida: $1"
+        exit 1
+        ;;
+esac
+
+# Si hay argumentos pero no son opciones, hacer búsqueda
+[ "$#" -ne 0 ] && {
+    ./lu -i "$@"
+    exit
+}
+
+# Menú interactivo
+trap "continue" 2
+
+while true; do
+    printf '\nOpciones del Rolodex:
+1. Buscar contacto
+2. Añadir contacto
+3. Eliminar contacto
+4. Modificar contacto
+5. Listar todos los contactos
+6. Enviar correo a contacto
+7. Buscar en phonebook de otro usuario
+8. Compartir entrada con alguien
+9. Salir
+Seleccione una opción (1-9): '
+
+    read choice
+    case "$choice" in
+        1) printf "Nombre a buscar: "
+           read name
+           [ -n "$name" ] && ./lu -i "$name" || echo "Búsqueda cancelada"
+           ;;
+           
+        2) ./add;;
+        
+        3) printf "Nombre a eliminar: "
+           read name
+           [ -n "$name" ] && ./rem -i "$name" || echo "Operación cancelada"
+           ;;
+           
+        4) printf "Nombre a modificar: "
+           read name
+           [ -n "$name" ] && ./change -i "$name" || echo "Operación cancelada"
+           ;;
+           
+        5) ./listall;;
+        
+        6) printf "Nombre del destinatario: "
+           read name
+           if [ -n "$name" ]; then
+               entry=$(grep -i "$name" "$PHONEBOOK") || {
+                   echo "No se encontró a $name"; continue
+               }
+               email=$(echo "$entry" | grep -o 'mail:[^[:space:]]*' | cut -d: -f2)
+               [ -z "$email" ] && {
+                   printf "Ingrese email para %s: " "$name"
+                   read email
+               }
+               [ -n "$email" ] && {
+                   TEMP_MSG="/tmp/rolo_msg_$$.txt"
+                   echo "To: $email" > "$TEMP_MSG"
+                   echo "Subject: " >> "$TEMP_MSG"
+                   echo "" >> "$TEMP_MSG"
+                   ${EDITOR:-vi} "$TEMP_MSG"
+                   [ -s "$TEMP_MSG" ] && sendmail "$email" < "$TEMP_MSG"
+                   rm -f "$TEMP_MSG"
+               }
+           else
+               echo "Operación cancelada"
+           fi
+           ;;
+           
+        7) printf "Usuario en cuyo phonebook buscar: "
+           read username
+           printf "Nombre a buscar: "
+           read name
+           if [ -n "$username" ] && [ -n "$name" ]; then
+               user_pb=$(get_user_phonebook "$username") && grep -i "$name" "$user_pb"
+           else
+               echo "Búsqueda cancelada"
+           fi
+           ;;
+           
+        8) printf "Destinatario (usuario o email): "
+           read recipient
+           printf "Nombre de entrada a compartir: "
+           read entry_name
+           if [ -n "$recipient" ] && [ -n "$entry_name" ]; then
+               send_rolo_entry "$recipient" "$entry_name"
+           else
+               echo "Operación cancelada"
+           fi
+           ;;
+           
+        9) exit 0;;
+        
+        *) echo "Opción no válida";;
+    esac
+done
