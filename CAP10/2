@@ -1,0 +1,6 @@
+¿Qué le ocurre a mycp si uno de los nombres de archivo contiene un carácter que tiene un significado especial para el shell, como ; o |?
+El programa sigue funcionando
+
+Con la excepción de los espacios en blanco, eso sí. Incluso después de escaparlos con una barra invertida (\), aún se dividen en el bucle for. La solución, por supuesto, es almacenar las variables en un arreglo, pero aún no hemos aprendido cómo hacerlo.
+
+Entonces, ¿por qué funciona el programa? Realmente no puedo decirlo, pero tal vez la sustitución del nombre de archivo se realiza después de que la expresión es analizada por caracteres especiales.
