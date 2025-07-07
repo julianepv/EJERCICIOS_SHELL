@@ -1,0 +1,100 @@
+# Agrega una opción -n a esperarpor que invierta la función de monitoreo. Así que
+#
+#       esperarpor -n sandy
+#
+# verifica cuándo sandy cierre la sesión en el sistema, y
+#
+#       esperarpor -n -f /tmp/dataout &
+#
+# verifica periódicamente la eliminación del archivo especificado.
+
+opcion_archivo=false
+opcion_correo=false
+invertir=false
+
+intervalo=60
+nombre_archivo=
+usuario=
+prefijo_inv=
+
+# Procesar las opciones de la línea de comandos
+while getopts mnt:f: opcion
+do
+    case "$opcion" in
+	f)  opcion_archivo=true
+	    nombre_archivo=$OPTARG;;
+
+	m)  opcion_correo=true;;
+
+	n)  invertir=true
+	    prefijo_inv=!;;
+
+	t)  intervalo=$OPTARG;;
+
+	\?) echo "Uso: esperarpor [-m] [-n] [-f archivo] [-t n] [usuario]"
+	    echo " -m significa ser informado por correo"
+	    echo " -f significa verificar por un archivo"
+	    echo " -t significa verificar cada n segundos."
+	    exit 1;;
+    esac
+done
+
+# Caso: esperarpor busca a un usuario (en lugar de un archivo)
+if [ "$opcion_archivo" = "false" ]
+then
+    # Guardar el nombre de usuario en la variable $usuario
+    if [ "$OPTIND" -gt "$#" ]
+    then
+	echo "¡Falta el nombre de usuario!"
+	exit 2
+    else
+	desplazamiento=$((OPTIND - 1))
+	shift $desplazamiento
+	usuario=$1
+    fi
+fi
+
+# Establecer la $condicion para: (i) verificar cuándo un usuario inicia sesión, o (ii) verificar si
+# el archivo llamado $nombre_archivo existe
+if [ "$opcion_archivo" = false ]
+then
+    condicion='who | grep "^$usuario " > /dev/null'
+else
+    condicion="[ -f $nombre_archivo ]"
+fi
+
+# Esperar (sleep) hasta que se cumpla la $condicion
+until eval $prefijo_inv "$condicion"
+do
+    sleep $intervalo
+done
+
+# Construir el mensaje a enviar al usuario
+if [ "$opcion_archivo" = false ]
+then
+    # Obtener el número de la terminal
+    tty=$(who | grep "$usuario" | sed 's/^[^[:space:]]* *\([^[:space:]]*\).*$/\1/')
+
+    if [ "$invertir" = false ]
+    then
+	mensaje="$usuario ha iniciado sesión en $tty"
+    else
+	mensaje="$usuario ha cerrado la sesión"
+    fi
+else
+    if [ "$invertir" = false ]
+    then
+	mensaje="El archivo $nombre_archivo existe"
+    else
+	mensaje="El archivo $nombre_archivo no existe (fue eliminado)"
+    fi
+fi
+
+# Escribir el mensaje en la salida estándar o enviarlo como correo
+if [ "$opcion_correo" = false ]
+then
+    echo "$mensaje"
+else
+    ejecutor=$(whoami)
+    echo "$mensaje" | mail "$ejecutor"
+fi
