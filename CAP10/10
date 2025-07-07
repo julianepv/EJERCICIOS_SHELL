@@ -1,3 +1,0 @@
-Modifica lu para que use printf para imprimir el nombre y el número de teléfono de forma que se alineen en columnas para nombres de hasta 40 caracteres de longitud (Pista: usa cut -f y el hecho de que los campos en la libreta de direcciones están separados por tabulaciones).
-
-Consulta lu para ver las modificaciones y test10.sh para hacer pruebas.

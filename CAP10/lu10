@@ -1,0 +1,85 @@
+#!/bin/bash
+
+nombre_buscado=$1
+longitud_max=0
+
+#
+# Encontrar el número de entradas coincidentes.
+#
+texto_coincidencias=$(grep "$nombre_buscado" phonebook)
+texto_local=$texto_coincidencias
+if [ ! -n "$texto_local" ]
+then
+    # Nada que imprimir
+    exit 0
+fi
+
+num_coincidencias=$(echo "$texto_local" | wc -l)
+num_local=$num_coincidencias
+
+#
+# Encontrar la longitud máxima del nombre entre las coincidencias.
+#
+
+# Cada iteración encuentra la longitud del nombre en la primera línea de
+# $texto_local, la compara con la longitud máxima y actualiza el máximo
+# si es necesario; después, se elimina la primera línea de $texto_local.
+while [ $num_local -ge 1 ]
+do
+    # Obtener la longitud del nombre actual
+    linea_actual=$(echo "$texto_local" | head -1)
+    longitud_actual=$(echo "$linea_actual" | cut -f1 | wc -m)
+    longitud_actual=$(($longitud_actual - 1)) # Resta 1 por el carácter de nueva línea de wc
+
+    # Encontrar la longitud máxima actual del nombre
+    if [ $longitud_actual -gt $longitud_max ]
+    then
+	    longitud_max=$longitud_actual
+    fi
+
+    # La longitud máxima que permitimos es 40; salir del bucle si se alcanza.
+    if [ $longitud_max -ge 40 ]
+    then
+	    longitud_max=40
+	    break
+    fi
+
+    # Eliminar la primera entrada para la siguiente iteración
+    num_local=$((num_local - 1))
+    if [ $num_local -gt 0 ]; then
+        texto_local=$(echo "$texto_local" | tail -n $num_local)
+    fi
+done
+
+#
+# Imprimir cada línea formateada de las coincidencias de la agenda.
+#
+
+# Reiniciar $texto_local y $num_local para el segundo recorrido
+texto_local=$texto_coincidencias
+num_local=$num_coincidencias
+
+while [ $num_local -ge 1 ]
+do
+    # Obtener los datos de la línea actual
+    linea_actual=$(echo "$texto_local" | head -1)
+    nombre_actual=$(echo "$linea_actual" | cut -f1)
+    numero_actual=$(echo "$linea_actual" | cut -f2)
+
+    # Asegurarse de que el nombre no exceda los 40 caracteres en la salida.
+    longitud_actual=$(echo "$nombre_actual" | wc -m)
+    longitud_actual=$((longitud_actual - 1))
+    if [ $longitud_actual -gt 40 ]
+    then
+	    nombre_actual="$(echo "$nombre_actual" | cut -c1-37)..."
+    fi
+
+    # Imprimir la línea rellenada con espacios hasta la longitud_max.
+    printf "%-*s   %s\n" $longitud_max "$nombre_actual" "$numero_actual"
+
+    # Eliminar la primera entrada para la siguiente iteración
+    num_local=$((num_local - 1))
+    if [ $num_local -gt 0 ]; then
+        texto_local=$(echo "$texto_local" | tail -n $num_local)
+    fi
+done

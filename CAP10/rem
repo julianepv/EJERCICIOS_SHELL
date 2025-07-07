@@ -1,0 +1,67 @@
+# Script para eliminar a alguien de la agenda (phonebook).
+#
+
+# Valida que se haya proporcionado exactamente un argumento.
+if [ "$#" -ne 1 ]
+then
+    echo "Número de argumentos incorrecto."
+    echo "Uso: rem nombre"
+    exit 1
+fi
+
+nombre=$1
+
+#
+# Encontrar el número de entradas coincidentes.
+#
+nombres_coincidentes=$(grep -i "$nombre" phonebook)
+
+# Se necesita esta condición porque 'echo "$nombres_coincidentes" | wc -l' no
+# funciona correctamente para una cadena vacía.
+if [ -n "$nombres_coincidentes" ]
+then
+    coincidencias=$(echo "$nombres_coincidentes" | wc -l)
+else
+    coincidencias=0
+fi
+
+#
+# Si hay más de una coincidencia, solicita al usuario confirmación para cada una;
+# si solo hay una, la elimina directamente.
+#
+if [ "$coincidencias" -gt 1 ]
+then
+    echo "Hay más de una coincidencia; por favor, selecciona cuál eliminar:"
+
+    # Cada iteración del bucle pide confirmación para eliminar la entrada que se
+    # encuentra en la primera línea de $nombres_coincidentes; luego, esa primera
+    # línea se elimina para la siguiente iteración.
+    while [ $coincidencias -ge 1 ]
+    do
+	    # Pide al usuario que confirme si desea eliminar la entrada.
+	    nombre_actual=$(echo "$nombres_coincidentes" | head -1)
+	    printf "%s\t¿Eliminar (s/n)? " "$nombre_actual"
+	    read eleccion_borrar
+
+	    # Si el usuario responde 's', se llama a este mismo script de forma
+      # recursiva con la línea completa y única para asegurar una sola coincidencia.
+	    if [ "_$eleccion_borrar" = "_s" ]
+	    then
+	        ./rem "$nombre_actual"
+	    fi
+
+	    # Preparar la siguiente iteración
+	    coincidencias=$((coincidencias - 1))
+      if [ $coincidencias -gt 0 ]; then
+	      nombres_coincidentes=$(echo "$nombres_coincidentes" | tail -n $coincidencias)
+      fi
+    done
+elif [ "$coincidencias" -eq 1 ]
+then
+    # Si solo hay una coincidencia, la elimina filtrando el archivo original.
+    # Se usa un archivo temporal para seguridad.
+    grep -v -i "$nombre" phonebook > /tmp/phonebook$$
+    mv /tmp/phonebook$$ phonebook
+else
+    echo "No pude encontrar a '$nombre' en la agenda."
+fi
