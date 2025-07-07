@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Usando el hecho de que la construcción del shell ${#var} da el número de caracteres
+# almacenados en var, reescribe wc en shell. ¡Asegúrate de usar aritmética entera!
+# (Notas: Cambia tu variable IFS a solo un carácter de nueva línea para que los
+# caracteres de espacio en blanco al inicio de la entrada se conserven, y también
+# usa la opción -r del comando read del shell para que los caracteres de barra invertida
+# al final de línea se ignoren).
+
+cctr=0  # contador de caracteres
+wctr=0  # contador de palabras
+lctr=0  # contador de líneas
+
+whitesp="$IFS"
+newline='
+'          # Solo una nueva línea
+
+# Establece $IFS a solo una nueva línea para que los espacios iniciales o finales no se pierdan al
+# leer cada línea
+IFS="$newline"
+
+while read -r line
+do
+    # Restablece los parámetros posicionales según los datos en $line y obtiene
+    # el número de parámetros con $#. Necesita restablecer $IFS para dividir correctamente
+    # las palabras.
+    IFS="$whitesp"
+    set -- $line
+    wctr=$((wctr + $#))
+
+    # Agrega el número de caracteres en $line más 1 por la nueva línea; ver página 244
+    # para la construcción ${#variable}
+    cctr=$((cctr + ${#line} + 1))
+    echo "línea:$line"
+    echo "ncaracteres:${#line}"
+
+    # Cada iteración suma 1 línea
+    lctr=$((lctr + 1))
+
+    # Establece $IFS a solo una nueva línea para que los espacios iniciales o finales no se pierdan
+    # al leer cada línea
+    IFS="$newline"
+done
+
+echo "	$lctr	$wctr	$cctr"
+

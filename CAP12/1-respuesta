@@ -1,0 +1,24 @@
+¿Cuales serán los resultados de los siguientes comandos?
+
+echo ${EDITOR}                    echo ${DB:=/users/pat/db}
+echo ${EDITOR:-/bin/ed}           echo ${PHONEBOOK:?}
+echo ${DB:-/users/pat/db}         ed=${EDITFLAG:+${EDITOR:-/bin/ed}}i
+
+Respuesta: 
+
+a. /bin/vi
+
+
+b. /bin/vi
+
+
+c. /users/pat/db
+
+
+d. /users/pat/db
+
+
+e. bash: PHONEBOOK: parameter null or not set
+
+
+f. $  or null (empty)

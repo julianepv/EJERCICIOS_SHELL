@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Reescribir el programa 'home' para que use el comando 'set' y la variable
+# IFS para extraer el directorio personal de /etc/passwd. ¿Qué le sucede al
+# programa si uno de los campos en el archivo es nulo, como en:
+#
+#       steve:*:203:100::/users/steve:/usr/bin/ksh
+#
+# Aquí el quinto campo es nulo (::).
+
+# Verificar que se proporcionó exactamente 1 argumento.
+if [ $# -ne 1 ]
+then
+    echo "Uso: directorio_usuario nombre_de_usuario"
+    exit 1
+fi
+
+# Buscar una coincidencia para el nombre de usuario en cada línea de /etc/passwd
+# y verificar que haya exactamente 1 coincidencia.
+linea_usuario="$(grep "^$1:" /etc/passwd)"
+
+# Verificar el código de salida de grep para ver si hubo coincidencias.
+if [ $? -ne 0 ]
+then
+    echo "No se encontró al usuario '$1'"
+    exit 1
+# Verificar si grep encontró más de una línea.
+elif [ $(echo "$linea_usuario" | wc -l) -gt 1 ]
+then
+    echo "Múltiples coincidencias para el usuario '$1'"
+    exit 1
+fi
+
+# Extraer el 6º campo de un formato de valores separados por dos puntos.
+IFS=':'
+set -- $linea_usuario # El '--' previene problemas si la línea empieza con un guion.
+echo "$6"

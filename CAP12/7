@@ -1,0 +1,55 @@
+# Modifica las funciones substring, leftmatch y rightmatch desarrolladas en los
+# ejercicios anteriores para que acepten opciones que permitan eliminar la mayor
+# coincidencia posible del patrón especificado desde el lado izquierdo o derecho
+# del valor especificado.
+
+gr_opt=
+while getopts g option
+do
+    case "$option" in
+
+    g)  gr_opt=-g;;
+
+    \?) echo "uso: substring [-l] patron_izq valor patron_der"
+        exit 1;;
+    esac
+done
+
+# Verifica que se hayan proporcionado exactamente 3 argumentos. $OPTIND apunta a
+# uno más allá del índice de la última opción (comenzando desde 1), así que necesitamos
+# que haya 2 argumentos más después del actual
+if [ $(($# - OPTIND)) -ne 2 ]
+then
+    echo "uso: [-g] substring patron_izq valor patron_der"
+    exit 1
+fi
+
+# Si es necesario, desplaza los argumentos más allá de cualquier bandera de opción
+shiftcount=$((OPTIND - 1))
+shift $shiftcount
+
+# Asocia nombres con los parámetros posicionales para mayor claridad
+lpattern="$1"
+value="$2"
+rpattern="$3"
+
+# Calcula la subcadena tomada desde la izquierda y desde la derecha
+subs_l=$(5-leftmatch $gr_opt "$lpattern" "$value")
+subs_r=$(4-rightmatch $gr_opt "$value" "$rpattern")
+
+# Obtiene el número de caracteres en la subcadena izquierda, subcadena derecha y
+# el valor original
+nchar_l=${#subs_l}
+nchar_r=${#subs_r}
+nchar_v=${#value}
+
+# Verifica si eliminar las subcadenas izquierda y derecha en conjunto elimina por completo
+# $value: si es así, imprime una línea en blanco; si no, imprime $value después de eliminar
+# las subcadenas izquierda y derecha
+if [ $((nchar_l + nchar_r)) -le $nchar_v ]
+then
+    echo
+else
+    echo "$(./rightmatch $gr_opt "$subs_l" "$rpattern")"
+fi
+
