@@ -1,0 +1,59 @@
+# Escribe un programa de shell llamado bgrep (búsqueda con grep en ventana)
+# que busca un patrón en un archivo, tal como lo hace grep. Por cada línea en
+# el archivo que coincida, imprime una "ventana" alrededor de la línea. Es
+# decir, imprime la línea anterior, la línea coincidente y la línea siguiente.
+# Asegúrate de manejar correctamente los casos especiales donde el patrón
+# coincide con la primera o la última línea del archivo.
+
+# Uso: bgrep patron archivo
+patron=$1
+archivo=$2
+
+# Validar la entrada del usuario
+if [ $# -ne 2 ]
+then
+    echo 'Uso: bgrep patron archivo'
+    exit 1
+elif ! [ -f "$archivo" ]
+then
+    echo "Archivo $archivo no encontrado"
+    exit 1
+fi
+
+# Número de líneas en el archivo
+longitud_archivo=$(wc -l < "$archivo")
+
+# Obtener los números de línea donde se encuentran las coincidencias
+coincidencias=$(grep -n "$patron" "$archivo" | cut -d ':' -f1)
+
+# Cada iteración del bucle imprime la línea antes de la línea $num_linea, la
+# línea misma y la línea posterior. Esto se logra usando head para restringir
+# los datos a las primeras $num_linea + 1 líneas, y luego usando tail para
+# cortar las últimas 3 (o 2) líneas. Las coincidencias en líneas consecutivas
+# resultarán en datos superpuestos.
+for num_linea in $coincidencias
+do
+    # Si la coincidencia está en la primera línea, la ventana empieza ahí.
+    # El número de líneas a mostrar con 'tail' será 3 (o 2 si el archivo es corto)
+    if [ "$num_linea" -eq 1 ]; then
+        linea_inicio=1
+    else
+        linea_inicio=$(($num_linea - 1))
+    fi
+
+    # Si la coincidencia está en la última línea, la ventana termina ahí.
+    if [ "$num_linea" -eq "$longitud_archivo" ]; then
+        linea_fin=$longitud_archivo
+    else
+        linea_fin=$(($num_linea + 1))
+    fi
+    
+    # Calcula cuántas líneas imprimir en la ventana
+    longitud_ventana=$(($linea_fin - $linea_inicio + 1))
+
+    echo '<-- inicio -->'
+    # Extrae e imprime la ventana de líneas
+    head -n "$linea_fin" "$archivo" | tail -n "$longitud_ventana"
+    echo '<--   fin  -->'
+    echo ''
+done

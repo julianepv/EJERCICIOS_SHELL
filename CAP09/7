@@ -1,0 +1,90 @@
+# Modificar wgrep para que acepte una opción -w que especifique el tamaño de
+# la ventana; así que
+#
+#       wgrep -w 3 UNIX texto
+#
+# debería imprimir tres líneas antes y después de cada línea del archivo 'texto'
+# que contenga el patrón 'UNIX'.
+
+# Uso: wgrep [-w tamano_ventana] patron archivo
+
+# Determinar el tamaño de la ventana $tamano_ventana; el valor por defecto es 1.
+tamano_ventana=1
+while getopts w: opcion
+do
+    case "$opcion" in
+
+	w)  tamano_ventana=$OPTARG
+	    # Asegurarse de que se pase un argumento entero a -w
+	    case $tamano_ventana in
+
+		# Verifica si el valor está vacío o contiene algo que no sea un dígito
+		''|*[!0-9]*)
+		    echo "El argumento para -w no es un entero positivo."
+		    exit 1;;
+
+		*)
+		    # No-op (sin operación)
+		    :;;
+	    esac;;
+
+	\?) echo "¡Opción no válida!"
+	    echo "Uso: wgrep [-w tamano_ventana] patron archivo"
+	    exit 1;;
+    esac
+done
+
+# Guardar el patrón en $patron y el nombre de archivo en $archivo
+if [ "$OPTIND" -gt "$#" ]
+then
+    echo "¡Falta el patrón o el nombre del archivo!"
+    echo "Uso: wgrep [-w tamano_ventana] patron archivo"
+    exit 2
+else
+    desplazamiento=$((OPTIND - 1))
+    shift $desplazamiento
+    patron=$1
+    archivo=$2
+fi
+
+# Validar el argumento del nombre de archivo
+if [ $# -ne 2 ]
+then
+    echo "Uso: wgrep patron archivo"
+    exit 1
+elif ! [ -f "$archivo" ]
+then
+    echo "El archivo '$archivo' no fue encontrado."
+    exit 1
+fi
+
+# Número de líneas en el archivo
+longitud_archivo=$(wc -l < "$archivo")
+
+# Obtener los números de línea donde se encuentran las coincidencias
+coincidencias=$(grep -n "$patron" "$archivo" | cut -d ':' -f1)
+
+# El bucle itera sobre cada coincidencia para imprimir la ventana de texto.
+for num_linea in $coincidencias
+do
+    # Calcula la línea de inicio de la ventana, asegurando que no sea menor a 1
+    linea_inicio=$(($num_linea - $tamano_ventana))
+    if [ "$linea_inicio" -lt 1 ]; then
+        linea_inicio=1
+    fi
+
+    # Calcula la línea de fin de la ventana, asegurando que no exceda el total de líneas
+    linea_fin=$(($num_linea + $tamano_ventana))
+    if [ "$linea_fin" -gt "$longitud_archivo" ]; then
+        linea_fin=$longitud_archivo
+    fi
+
+    # Calcula el número total de líneas a mostrar en la ventana
+    longitud_total=$(($linea_fin - $linea_inicio + 1))
+
+    echo "<-- inicio -->"
+    # Extrae el bloque de texto usando head y tail y lo imprime
+    head -n "$linea_fin" "$archivo" | tail -n "$longitud_total"
+    echo "<--   fin  -->"
+    echo ""
+done

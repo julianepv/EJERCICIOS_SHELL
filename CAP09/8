@@ -1,0 +1,107 @@
+# Modificar wgrep para que acepte un número variable de nombres de archivo como
+# argumentos. El programa debería preceder cada línea de salida con el nombre
+# del archivo en el que ocurre la coincidencia (como lo hace grep).
+
+# Uso: wgrep [-w tamano_ventana] patron archivo...
+
+# Determinar el tamaño de la ventana $tamano_ventana; el valor por defecto es 1.
+tamano_ventana=1
+while getopts w: opcion
+do
+    case "$opcion" in
+
+	w)  tamano_ventana=$OPTARG
+	    # Asegurarse de que se pase un argumento entero a -w
+	    case $tamano_ventana in
+
+		# Verifica si el valor está vacío o contiene algo que no sea un dígito
+		''|*[!0-9]*)
+		    echo "El argumento para -w no es un entero."
+		    exit 1;;
+
+		*)
+		    # No-op (sin operación)
+		    :;;
+	    esac;;
+
+	\?) echo "¡Opción no válida!"
+	    echo "Uso: wgrep [-w tamano_ventana] patron archivo..."
+	    exit 1;;
+    esac
+done
+
+# Verificar que se proporcione al menos un patrón y un nombre de archivo.
+if [ "$OPTIND" -gt "$#" ]
+then
+    echo "¡Falta el patrón o el nombre del archivo!"
+    echo "Uso: wgrep [-w tamano_ventana] patron archivo..."
+    exit 2
+fi
+
+# Mover la posición de los argumentos más allá de las opciones procesadas (-w).
+# Guardar el primer argumento como el patrón y mover la posición al primer nombre de archivo.
+desplazamiento=$((OPTIND - 1))
+shift $desplazamiento
+patron=$1
+shift 1
+
+# Validar los argumentos de nombre de archivo antes de procesar.
+for archivo in "$@"
+do
+    if ! [ -f "$archivo" ]
+    then
+	echo "El archivo '$archivo' no fue encontrado."
+	exit 1
+    fi
+done
+
+# Cada iteración de este bucle imprime la ventana alrededor de cada coincidencia
+# del patrón encontrada para un nombre de archivo dado.
+for archivo in "$@"
+do
+    # Número de líneas en el archivo.
+    longitud_archivo=$(wc -l < "$archivo")
+
+    # Obtener los números de línea donde se encuentran las coincidencias.
+    coincidencias=$(grep -n "$patron" "$archivo" | cut -d ':' -f1)
+    
+    # Si no hay coincidencias en este archivo, pasa al siguiente.
+    if [ ! -n "$coincidencias" ]
+    then
+	continue
+    fi
+
+    # Imprimir el encabezado del archivo.
+    echo "==================== inicio del archivo: $archivo"
+    echo ""
+
+    # Este bucle interno itera sobre cada línea de coincidencia en el archivo actual.
+    for num_linea in $coincidencias
+    do
+	# Calcula la línea de inicio y fin de la ventana.
+	linea_inicio=$(($num_linea - $tamano_ventana))
+	if [ "$linea_inicio" -lt 1 ]; then
+	    linea_inicio=1
+	fi
+
+	linea_fin=$(($num_linea + $tamano_ventana))
+	if [ "$linea_fin" -gt "$longitud_archivo" ]; then
+	    linea_fin=$longitud_archivo
+	fi
+
+	longitud_total=$(($linea_fin - $linea_inicio + 1))
+
+	echo "<-- inicio -->"
+	# Extrae el bloque de texto y lo prefija con el nombre del archivo y el número de línea.
+	# La herramienta 'sed' se usa aquí para añadir el prefijo a cada línea.
+	head -n "$linea_fin" "$archivo" | tail -n "$longitud_total" | sed "s/^/$archivo:& /"
+	echo "<--   fin  -->"
+	echo ""
+    done
+
+    # Imprimir el pie de página del archivo.
+    echo "==================== fin del archivo: $archivo"
+    echo ""
+    echo ""
+
+done # Fin del bucle que procesa cada archivo.
