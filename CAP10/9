@@ -1,0 +1,10 @@
+¿Qué le ocurre al programa rolo si se presiona solo Enter como nombre en las opciones de agregar, buscar o eliminar?
+
+Agregar (add):
+La versión original de add permitía que se ingresara una entrada en blanco como un nombre o número válido. Esto no parece un comportamiento particularmente deseable, por lo que el programa fue modificado para que una entrada en blanco ya no sea considerada válida.
+
+Buscar (look up):
+Una búsqueda, que está impulsada por grep, por definición coincide con todo cuando la entrada está en blanco. Esto parece ser una característica útil que permite al usuario imprimir de forma muy conveniente toda la libreta de direcciones, por lo que se deja tal como está.
+
+Eliminar (remove):
+Una operación de eliminación, también impulsada por grep, por definición coincide con todo cuando la entrada está en blanco. Esto parece ser una característica útil que permite al usuario recorrer todos los nombres en la libreta telefónica y eliminar algunos o todos los registros (recuerda que se solicita confirmación individual al usuario para eliminar entradas cuando hay múltiples coincidencias), por lo que se deja tal como está.

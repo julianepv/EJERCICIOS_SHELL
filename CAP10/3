@@ -1,0 +1,159 @@
+# Escribe un programa llamado mymv que haga con el comando 'mv' lo que micp
+# hace con el comando 'cp'. ¿Cuántos cambios tuviste que hacer a mycp para
+# producir este nuevo programa?
+
+# Nota: Este programa modifica la lógica del script anterior. El cambio
+# principal es que en el último bloque de código, 'cp' se cambia por 'mv'.
+
+num_args=
+num_origen=-1
+lista_archivos=
+lista_mover=
+lista_faltantes=
+verificar_sobrescritura=true
+
+while getopts n opcion
+do
+    case "$opcion" in
+	n)  verificar_sobrescritura=false;;
+	\?) echo "Uso: mymv [-n] ORIGEN DESTINO"
+	    echo "       mymv [-n] ORIGEN... DIRECTORIO"
+	    echo "  -n suprime la verificación para prevenir la sobreescritura de archivos"
+	    exit 1;;
+    esac
+done
+
+desplazamiento=$((OPTIND - 1))
+shift $desplazamiento
+num_args=$#
+
+#
+# Procesar los argumentos, guardando todos menos el último en 'lista_archivos'.
+#
+while [ "$#" -gt 1 ]
+do
+    lista_archivos="$lista_archivos $1"
+    shift
+done
+
+destino="$1"
+
+#
+# Si hay solo un argumento, o más de dos y el último no es un directorio,
+# muestra un mensaje de error.
+#
+if [ "$num_args" -eq 1 ] || ([ "$num_args" -gt 2 ] && [ ! -d "$destino" ]); then
+    echo "Uso: mymv [-n] ORIGEN DESTINO"
+    echo "       mymv [-n] ORIGEN... DIRECTORIO"
+    exit 1
+fi
+
+#
+# Si no hay argumentos, solicitarlos al usuario de forma interactiva.
+#
+if [ "$num_args" -eq 0 ]
+then
+    # Leer archivos de origen
+    origen=' '
+    while [ -n "$origen" ]
+    do
+	printf 'Ingrese archivo de origen (presione Enter para terminar): '
+	read origen
+	lista_archivos="$lista_archivos $origen"
+
+	# Eliminar espacios en blanco iniciales
+	origen=$(printf "$origen" | sed "s/^[ \t]*//")
+	# Incrementar el contador de archivos de origen
+	: $((num_origen += 1))
+    done
+    
+    # Verificar que se haya dado al menos un archivo de origen
+    if [ $num_origen -eq 0 ]
+    then
+	echo "Error: se requiere especificar al menos un archivo de origen."
+	exit 1
+    fi
+
+    # Leer archivo de destino
+    printf 'Ingrese archivo de destino: '
+    read destino
+    destino=$(printf "$destino" | sed "s/^[ \t]*//")
+    if [ ! -n "$destino" ]
+    then
+	echo "Error: argumento de destino no válido."
+	exit 1
+    fi
+fi
+
+#
+# Recorrer cada archivo en 'lista_archivos'.
+#
+for origen in $lista_archivos
+do
+    #
+    # Asegurarse de que el origen ($origen) exista.
+    #
+    if [ ! -f "$origen" ]
+    then
+	lista_faltantes="$lista_faltantes $origen"
+	continue
+    fi
+    #
+    # Comprobar si el destino es un directorio.
+    #
+    if [ -d "$destino" ]
+    then
+	archivo_destino="$destino/$(basename "$origen")"
+    else
+	archivo_destino="$destino"
+    fi
+
+    #
+    # Añadir archivo a 'lista_mover' si el destino no existe o si el usuario
+    # autoriza la sobreescritura.
+    #
+    if [ "$verificar_sobrescritura" = true ] && [ -e "$archivo_destino" ]; then
+	printf "'%s' ya existe; ¿sobrescribir (si/no)? " "$archivo_destino"
+	read respuesta
+
+	if [ "$respuesta" = "si" ]
+	then
+	    lista_mover="$lista_mover $origen"
+	fi
+    else
+	lista_mover="$lista_mover $origen"
+    fi
+done
+
+#
+# Verificar si hay archivos faltantes; si es así, preguntar si se continúa
+# moviendo los restantes.
+#
+if [ -n "$lista_faltantes" ]
+then
+    echo "Los siguientes archivos no existen:$lista_faltantes"
+    
+    if [ -n "$lista_mover" ]
+    then
+	printf "¿Deberían moverse los archivos restantes (si/no)? "
+	read respuesta
+
+	if [ "$respuesta" != "si" ]
+	then
+	    echo "Archivos no movidos."
+	    exit 0
+	fi
+    else
+	echo "No quedan archivos por mover."
+	exit 0
+    fi
+fi
+
+#
+# Ahora, a mover. Primero, asegurarse de que haya algo que mover. Esto es
+# programación defensiva.
+#
+if [ -n "$lista_mover" ]
+then
+    mv $lista_mover "$destino"
+fi

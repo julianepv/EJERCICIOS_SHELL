@@ -1,0 +1,141 @@
+# Modificar mycp para usar sed en lugar del bucle while para procesar
+# los argumentos escritos en la línea de comandos.
+
+num_args=
+num_origen=-1
+lista_archivos=
+lista_copiar=
+lista_faltantes=
+verificar_sobrescritura="verdadero"
+num_args=$#
+
+#
+# Procesar los argumentos, guardando todos menos el último en 'lista_archivos'.
+#
+while [ "$#" -gt 1 ]
+do
+    lista_archivos="$lista_archivos $1"
+    shift
+done
+
+#
+# Guardar el archivo de DESTINO en $destino. Ten en cuenta que en el caso
+# de que la única opción proporcionada sea -n (es decir, no se dan archivos),
+# -n se almacenará erróneamente en $destino - esto está bien porque
+# $destino se sobrescribirá más adelante.
+#
+destino="$1"
+
+#
+# Comprobar y, si se encuentra, eliminar la opción -n de 'lista_archivos',
+# y guardar el número de argumentos restantes en 'num_args'. Incluimos
+# $destino en la comprobación de grep para el caso de que -n fuera el único
+# argumento (y por lo tanto 'lista_archivos' es NULO y $destino tiene el valor -n).
+#
+if echo "$lista_archivos $destino" | grep --quiet -E '^-n | -n$'
+then
+    # Elimina la opción -n de la lista de archivos
+    lista_archivos=$(printf "%s" "$lista_archivos" | sed -E 's/ -n |^-n //')
+    verificar_sobrescritura="falso"
+    num_args=$((num_args - 1))
+fi
+
+#
+# Si hay solo un argumento, o más de dos y el último no es un directorio,
+# muestra un mensaje de error.
+#
+if [ "$num_args" -eq 1 ] || ([ "$num_args" -gt 2 ] && [ ! -d "$destino" ]); then
+    echo "Uso: mycp [-n] ORIGEN DESTINO"
+    echo "       mycp [-n] ORIGEN... DIRECTORIO"
+    exit 1
+fi
+
+#
+# Si no hay argumentos (cero), solicitarlos al usuario de forma interactiva.
+#
+if [ "$num_args" -eq 0 ]
+then
+    # Leer archivos de origen
+    origen=' '
+    while [ -n "$origen" ]
+    do
+	    printf 'Ingrese archivo de origen (presione Enter para terminar): '
+	    read origen
+	    lista_archivos="$lista_archivos $origen"
+
+	    origen=$(printf "%s" "$origen" | sed "s/^[ \t]*//")
+	    : $((num_origen += 1))
+    done
+    
+    if [ $num_origen -eq 0 ]; then
+	    echo "Error: se requiere especificar al menos un archivo de origen."
+	    exit 1
+    fi
+
+    # Leer archivo de destino
+    printf 'Ingrese archivo de destino: '
+    read destino
+    destino=$(printf "%s" "$destino" | sed "s/^[ \t]*//")
+    if [ ! -n "$destino" ]; then
+	    echo "Error: argumento de destino no válido."
+	    exit 1
+    fi
+fi
+
+#
+# Recorrer cada archivo en la 'lista_archivos'.
+#
+for origen in $lista_archivos
+do
+    if [ ! -f "$origen" ]; then
+        lista_faltantes="$lista_faltantes $origen"
+        continue
+    fi
+
+    if [ -d "$destino" ]; then
+        archivo_destino="$destino/$(basename "$origen")"
+    else
+        archivo_destino="$destino"
+    fi
+
+    #
+    # Añadir archivo a 'lista_copiar' si el destino no existe, si el usuario
+    # autoriza la sobreescritura, o si la verificación está desactivada con -n.
+    #
+    if [ "$verificar_sobrescritura" = "verdadero" ] && [ -e "$archivo_destino" ]; then
+        printf "'%s' ya existe; ¿sobrescribir (si/no)? " "$archivo_destino"
+        read respuesta
+        if [ "$respuesta" = "si" ]; then
+            lista_copiar="$lista_copiar $origen"
+        fi
+    else
+        lista_copiar="$lista_copiar $origen"
+    fi
+done
+
+#
+# Verificar si hay archivos faltantes; si es así, preguntar al usuario
+# si desea continuar copiando los restantes.
+#
+if [ -n "$lista_faltantes" ]; then
+    echo "Los siguientes archivos no existen:$lista_faltantes"
+
+    if [ -n "$lista_copiar" ]; then
+        printf "¿Deberían copiarse los archivos restantes (si/no)? "
+        read respuesta
+        if [ "$respuesta" != "si" ]; then
+            echo "Archivos no copiados."
+            exit 0
+        fi
+    else
+        echo "No quedan archivos por copiar."
+        exit 0
+    fi
+fi
+
+#
+# Ahora, a realizar la copia.
+#
+if [ -n "$lista_copiar" ]; then
+    cp $lista_copiar "$destino"
+fi
