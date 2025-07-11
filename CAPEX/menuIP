@@ -1,0 +1,56 @@
+# Menú que valida IP, Numero de teléfono de Panamá y MAC
+# 
+
+clear
+
+if [ "$#" -ne 0 ]
+then
+     echo "Este script no acepta argumentos directamente."
+     exit
+fi
+
+validchoice=""
+
+# Bucle hasta que una selección válida se escoja
+until [ ! -z "$validchoice" ]
+do
+    #
+    # Despliega el Menu
+    #
+    echo -n "
+    Ingresa la opcion a validar:
+
+           1. Dirección I.P
+           2. Número de Teléfono (+507)
+           3. Dirección MAC
+           4. Salir
+    Seleccione (1-4):   "
+
+    read choice
+    echo
+
+    case "$choice" in
+        1) echo -n "Ingrese la IP a validar: "
+           read ip
+           validar_ip "$ip"
+           ;;
+
+        2) echo -n "Ingrese el número telefonico: "
+           read telefono
+           validar_telefono "$telefono"
+           ;;
+
+        3) echo -n "Ingrese la dirección MAC a validar: "
+           read mac
+           validar_mac "$mac"
+           ;;
+
+        4) echo "Adiós..."
+           validchoice="TRUE"
+           ;;
+
+        *) echo "Opción inválida";;
+    esac
+done
+
+

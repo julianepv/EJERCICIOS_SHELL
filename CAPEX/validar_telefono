@@ -1,0 +1,9 @@
+TELEFONO="$1"
+
+if [[ "$TELEFONO" =~ ^\+507[0-9]{8}$ ]]; then
+  echo "✅ Telefono Valido"
+else
+  echo "❌ Telefono Invalido"
+fi
+
+
